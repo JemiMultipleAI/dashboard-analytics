@@ -38,7 +38,7 @@ export default function Login() {
             <Layers className="w-10 h-10 text-primary-foreground" />
           </div>
           <h1 className="text-4xl font-bold text-primary-foreground mb-4">
-            Unified Marketing Hub
+            Unified Analytics
           </h1>
           <p className="text-lg text-primary-foreground/80">
             Connect Google Analytics, Search Console, and Google Ads in one powerful dashboard.
@@ -55,7 +55,7 @@ export default function Login() {
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
               <Layers className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">UMH</span>
+            <span className="text-xl font-bold text-foreground">UA</span>
           </div>
 
           <div className="text-center mb-8">

@@ -53,7 +53,7 @@ export default function Dashboard() {
         {/* Welcome section */}
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Welcome to Unified Marketing Hub</h2>
+            <h2 className="text-2xl font-bold text-foreground">Welcome to Unified Analytics</h2>
             <p className="text-muted-foreground mt-1">
               {connectedCount === 0
                 ? 'Connect your accounts to start viewing your marketing data'

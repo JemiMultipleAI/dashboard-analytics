@@ -38,3 +38,10 @@ next-env.d.ts
 
 # bun
 bun.lockb
+
+# PM2 logs
+logs/
+*.log
+
+# nginx config
+nginx.*

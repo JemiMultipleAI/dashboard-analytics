@@ -52,7 +52,7 @@ export const Sidebar = () => {
             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
               <Layers className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-foreground">UMH</span>
+            <span className="font-semibold text-foreground">UA</span>
           </div>
         )}
         <Button
