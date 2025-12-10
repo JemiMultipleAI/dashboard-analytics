@@ -147,6 +147,19 @@
   }
 }
 
+/* Hide Lovable branding/watermark */
+[class*="lovable"],
+[id*="lovable"],
+[class*="Lovable"],
+[id*="Lovable"],
+iframe[src*="lovable"],
+div[data-lovable],
+div[data-powered-by] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

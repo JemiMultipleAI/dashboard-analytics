@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
   GA4RealtimeWidget,
@@ -10,41 +11,56 @@ import {
   GA4DailyUsersWidget,
 } from '@/components/widgets/GA4Widgets';
 import { StatCard } from '@/components/dashboard/StatCard';
-import { getGA4Data } from '@/lib/mockData';
-import { Users, Eye, Clock, MousePointer } from 'lucide-react';
+import { useGA4Realtime, useGA4Acquisition, useGA4Events } from '@/hooks/useGA4Data';
+import { Users, Eye, Users as SessionsIcon, MousePointer, Loader2 } from 'lucide-react';
 
 export default function AnalyticsDashboard() {
-  const data = getGA4Data();
+  const { data: realtimeData, isLoading: isLoadingRealtime } = useGA4Realtime();
+  const { data: acquisitionData, isLoading: isLoadingAcquisition } = useGA4Acquisition();
+  const { data: eventsData, isLoading: isLoadingEvents } = useGA4Events();
+  
+  const isLoading = isLoadingRealtime || isLoadingAcquisition || isLoadingEvents;
 
   return (
-    <DashboardLayout title="Google Analytics">
+    <DashboardLayout title="Unified Marketing Hub">
       <div className="space-y-6 animate-fade-in">
+
         {/* Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <StatCard
-            title="Active Users"
-            value={data.realtime.activeUsers.toLocaleString()}
-            trend={12}
-            icon={Users}
-          />
-          <StatCard
-            title="Page Views"
-            value={data.realtime.pageViews.toLocaleString()}
-            trend={8}
-            icon={Eye}
-          />
-          <StatCard
-            title="Avg. Session"
-            value="2m 34s"
-            trend={-3}
-            icon={Clock}
-          />
-          <StatCard
-            title="Events/min"
-            value={data.realtime.eventsPerMinute.toString()}
-            trend={15}
-            icon={MousePointer}
-          />
+          {isLoading ? (
+            <>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center justify-center h-24 border rounded-lg">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <StatCard
+                title="Active Users"
+                value={realtimeData?.activeUsers.toLocaleString() || '0'}
+                icon={Users}
+              />
+              <StatCard
+                title="Page Views"
+                value={realtimeData?.pageViews.toLocaleString() || '0'}
+                icon={Eye}
+              />
+              <StatCard
+                title="Total Sessions"
+                value={acquisitionData?.totalSessions?.toLocaleString() || '0'}
+                icon={SessionsIcon}
+              />
+              <StatCard
+                title="Total Events"
+                value={Array.isArray(eventsData) 
+                  ? eventsData.reduce((sum, event) => sum + (event.count || 0), 0).toLocaleString()
+                  : ((eventsData as any)?.totalEvents?.toLocaleString() || '0')}
+                icon={MousePointer}
+              />
+            </>
+          )}
         </div>
 
         {/* Main Widgets */}
