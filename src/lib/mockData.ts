@@ -87,45 +87,73 @@ export const getGSCData = () => ({
   ],
 });
 
-export const getAdsData = () => ({
-  overview: {
-    totalSpend: 12450,
-    totalConversions: 892,
-    avgCPC: 1.24,
-    avgCTR: 4.8,
-    roas: 3.2,
-    spendTrend: -5,
-    conversionsTrend: 18,
-  },
-  campaigns: [
-    { name: "Brand Awareness", spend: 3200, clicks: 8900, conversions: 245, ctr: 5.2, status: "active" },
-    { name: "Product Launch", spend: 4500, clicks: 12400, conversions: 389, ctr: 4.9, status: "active" },
-    { name: "Retargeting", spend: 2100, clicks: 5600, conversions: 178, ctr: 6.1, status: "active" },
-    { name: "Holiday Sale", spend: 2650, clicks: 7200, conversions: 80, ctr: 3.8, status: "paused" },
-  ],
-  keywords: [
-    { keyword: "marketing software", clicks: 4500, cpc: 1.45, conversions: 156, quality: 9 },
-    { keyword: "analytics platform", clicks: 3800, cpc: 1.32, conversions: 134, quality: 8 },
-    { keyword: "dashboard tool", clicks: 2900, cpc: 0.98, conversions: 98, quality: 7 },
-    { keyword: "data visualization", clicks: 2100, cpc: 1.15, conversions: 72, quality: 8 },
-    { keyword: "business intelligence", clicks: 1800, cpc: 1.67, conversions: 64, quality: 6 },
-  ],
-  recommendations: [
-    { type: "budget", title: "Increase budget for high-performing campaigns", impact: "high", potential: "+23% conversions" },
-    { type: "keyword", title: "Add negative keywords to reduce waste", impact: "medium", potential: "-12% spend" },
-    { type: "bid", title: "Adjust bids for mobile devices", impact: "medium", potential: "+15% CTR" },
-    { type: "ad", title: "Test new ad copy variations", impact: "low", potential: "+8% CTR" },
-  ],
-  spendOverTime: [
-    { date: "Mon", spend: 1650 },
-    { date: "Tue", spend: 1820 },
-    { date: "Wed", spend: 1940 },
-    { date: "Thu", spend: 1780 },
-    { date: "Fri", spend: 2100 },
-    { date: "Sat", spend: 1580 },
-    { date: "Sun", spend: 1580 },
-  ],
-});
+export const getAdsData = () => {
+  const totalClicks = 34100;
+  const totalConversions = 892;
+  const totalSpend = 12450;
+  const totalImpressions = 710000;
+  
+  return {
+    overview: {
+      clicks: totalClicks,
+      clicksTrend: -12.5,
+      conversions: totalConversions,
+      conversionsTrend: 18.2,
+      cost: totalSpend,
+      costTrend: -5.3,
+      costPerConversion: totalConversions > 0 ? totalSpend / totalConversions : 0,
+      costPerConversionTrend: -8.1,
+      totalSpend: totalSpend,
+      totalConversions: totalConversions,
+      avgCPC: 1.24,
+      avgCTR: 4.8,
+      roas: 3.2,
+      spendTrend: -5,
+      conversionsTrend: 18,
+    },
+    campaigns: [
+      { name: "Brand Awareness", impressions: 185000, clicks: 8900, ctr: 4.81, spend: 3200, avgCPC: 0.36, conversions: 245, status: "active" },
+      { name: "Product Launch", impressions: 245000, clicks: 12400, ctr: 5.06, spend: 4500, avgCPC: 0.36, conversions: 389, status: "active" },
+      { name: "Retargeting", impressions: 125000, clicks: 5600, ctr: 4.48, spend: 2100, avgCPC: 0.38, conversions: 178, status: "active" },
+      { name: "Holiday Sale", impressions: 155000, clicks: 7200, ctr: 4.65, spend: 2650, avgCPC: 0.37, conversions: 80, status: "paused" },
+    ],
+    adGroups: [
+      { name: "Brand - Search", impressions: 95000, clicks: 4800, ctr: 5.05, spend: 1650, avgCPC: 0.34, conversions: 145 },
+      { name: "Brand - Display", impressions: 90000, clicks: 4100, ctr: 4.56, spend: 1550, avgCPC: 0.38, conversions: 100 },
+      { name: "Product - Core", impressions: 130000, clicks: 7200, ctr: 5.54, spend: 2400, avgCPC: 0.33, conversions: 210 },
+      { name: "Product - Extended", impressions: 115000, clicks: 5200, ctr: 4.52, spend: 2100, avgCPC: 0.40, conversions: 179 },
+      { name: "Retargeting - Cart", impressions: 75000, clicks: 3200, ctr: 4.27, spend: 1200, avgCPC: 0.38, conversions: 98 },
+      { name: "Retargeting - Browse", impressions: 50000, clicks: 2400, ctr: 4.80, spend: 900, avgCPC: 0.38, conversions: 80 },
+    ],
+    devices: [
+      { device: "Mobile", impressions: 426000, clicks: 20460, ctr: 4.80, spend: 7470, conversions: 535, percentage: 60 },
+      { device: "Desktop", impressions: 213000, clicks: 10230, ctr: 4.80, spend: 3735, conversions: 268, percentage: 30 },
+      { device: "Tablet", impressions: 71000, clicks: 3410, ctr: 4.80, spend: 1245, conversions: 89, percentage: 10 },
+    ],
+    keywords: [
+      { keyword: "marketing software", clicks: 4500, cpc: 1.45, conversions: 156, quality: 9 },
+      { keyword: "analytics platform", clicks: 3800, cpc: 1.32, conversions: 134, quality: 8 },
+      { keyword: "dashboard tool", clicks: 2900, cpc: 0.98, conversions: 98, quality: 7 },
+      { keyword: "data visualization", clicks: 2100, cpc: 1.15, conversions: 72, quality: 8 },
+      { keyword: "business intelligence", clicks: 1800, cpc: 1.67, conversions: 64, quality: 6 },
+    ],
+    recommendations: [
+      { type: "budget", title: "Increase budget for high-performing campaigns", impact: "high", potential: "+23% conversions" },
+      { type: "keyword", title: "Add negative keywords to reduce waste", impact: "medium", potential: "-12% spend" },
+      { type: "bid", title: "Adjust bids for mobile devices", impact: "medium", potential: "+15% CTR" },
+      { type: "ad", title: "Test new ad copy variations", impact: "low", potential: "+8% CTR" },
+    ],
+    spendOverTime: [
+      { date: "Mon", spend: 1650 },
+      { date: "Tue", spend: 1820 },
+      { date: "Wed", spend: 1940 },
+      { date: "Thu", spend: 1780 },
+      { date: "Fri", spend: 2100 },
+      { date: "Sat", spend: 1580 },
+      { date: "Sun", spend: 1580 },
+    ],
+  };
+};
 
 export type WidgetType = 
   | 'ga4-realtime'

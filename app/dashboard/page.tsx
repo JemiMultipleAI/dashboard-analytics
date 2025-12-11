@@ -1,6 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccountConnectionCard } from '@/components/dashboard/AccountConnectionCard';
 import { useApp } from '@/contexts/AppContext';
@@ -11,11 +12,40 @@ import { DashboardCard } from '@/components/dashboard/DashboardCard';
 
 export default function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { connectedAccounts, connectAccount, customDashboards } = useApp();
 
-  const handleConnect = (account: 'ga4' | 'gsc' | 'ads') => {
-    connectAccount(account);
-    toast.success(`${account.toUpperCase()} account connected successfully!`);
+  useEffect(() => {
+    // Check if we just returned from OAuth callback
+    const connected = searchParams.get('connected');
+    const error = searchParams.get('error');
+    
+    if (connected) {
+      const account = connected as 'ga4' | 'gsc' | 'ads';
+      // Only connect if not already connected to prevent infinite loops
+      if (!connectedAccounts[account]) {
+        connectAccount(account);
+        toast.success(`${account.toUpperCase()} account connected successfully!`);
+      }
+      // Clean up URL
+      router.replace('/dashboard');
+    } else if (error) {
+      toast.error('Authentication failed. Please try again.');
+      router.replace('/dashboard');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); // Only depend on searchParams to avoid infinite loops
+
+  const handleConnect = async (account: 'ga4' | 'gsc' | 'ads') => {
+    try {
+      const { initiateGoogleAuth } = await import('@/lib/api');
+      const authUrl = await initiateGoogleAuth(account);
+      // Redirect to Google OAuth
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error initiating OAuth:', error);
+      toast.error('Failed to initiate authentication');
+    }
   };
 
   const accounts = [

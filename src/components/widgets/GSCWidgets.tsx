@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { fetchGSCData } from '@/lib/api';
 import { getGSCData } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { StatCard } from '../dashboard/StatCard';
@@ -5,66 +9,130 @@ import { MousePointer, Eye, Percent, Hash, CheckCircle, AlertCircle, Clock, Zap 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 
-const data = getGSCData();
+const useGSCData = () => {
+  const [data, setData] = useState(getGSCData());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isRealData, setIsRealData] = useState(false);
 
-export const GSCOverviewWidget = () => (
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <StatCard
-      title="Total Clicks"
-      value={data.overview.totalClicks.toLocaleString()}
-      trend={data.overview.clicksTrend}
-      icon={MousePointer}
-    />
-    <StatCard
-      title="Impressions"
-      value={data.overview.totalImpressions.toLocaleString()}
-      trend={data.overview.impressionsTrend}
-      icon={Eye}
-    />
-    <StatCard
-      title="Avg. CTR"
-      value={`${data.overview.avgCTR}%`}
-      icon={Percent}
-    />
-    <StatCard
-      title="Avg. Position"
-      value={data.overview.avgPosition.toFixed(1)}
-      icon={Hash}
-    />
-  </div>
-);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        console.log('🔄 Fetching real GSC data...');
+        const realData = await fetchGSCData();
+        console.log('✅ Received real GSC data:', realData);
+        setData(realData);
+        setIsRealData(true);
+        setError(null);
+      } catch (err: any) {
+        console.warn('⚠️ Using mock GSC data:', err.message);
+        // Always set error message so user knows what went wrong
+        setError(err.message);
+        setIsRealData(false);
+        // Keep using mock data if not authenticated or on error
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export const GSCQueriesWidget = () => (
-  <DashboardCard title="Top Queries" subtitle="Best performing search queries">
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="text-left text-xs font-medium text-muted-foreground pb-3">Query</th>
-            <th className="text-right text-xs font-medium text-muted-foreground pb-3">Clicks</th>
-            <th className="text-right text-xs font-medium text-muted-foreground pb-3">CTR</th>
-            <th className="text-right text-xs font-medium text-muted-foreground pb-3">Position</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.topQueries.map((query) => (
+    loadData();
+  }, []);
+
+  return { data, loading, error, isRealData };
+};
+
+export const GSCOverviewWidget = () => {
+  const { data, error, isRealData } = useGSCData();
+  
+  return (
+    <>
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive mb-4">
+          <p className="text-sm font-medium">❌ Error loading Search Console data:</p>
+          <p className="text-xs mt-1">{error}</p>
+          {error.includes('Not authenticated') && (
+            <p className="text-xs mt-2">Please connect your Google Search Console account from the dashboard.</p>
+          )}
+          {error.includes('No sites found') && (
+            <p className="text-xs mt-2">Please add a property to Google Search Console first.</p>
+          )}
+          {error.includes('Access denied') && (
+            <p className="text-xs mt-2">Please ensure the Search Console API is enabled in Google Cloud Console.</p>
+          )}
+        </div>
+      )}
+      {isRealData && !error && (
+        <div className="bg-success/10 border border-success/20 rounded-lg p-2 text-success mb-4 text-xs">
+          ✅ Showing real Search Console data
+        </div>
+      )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatCard
+        title="Total Clicks"
+        value={data.overview.totalClicks.toLocaleString()}
+        trend={data.overview.clicksTrend}
+        icon={MousePointer}
+      />
+      <StatCard
+        title="Impressions"
+        value={data.overview.totalImpressions.toLocaleString()}
+        trend={data.overview.impressionsTrend}
+        icon={Eye}
+      />
+      <StatCard
+        title="Avg. CTR"
+        value={`${data.overview.avgCTR}%`}
+        icon={Percent}
+      />
+      <StatCard
+        title="Avg. Position"
+        value={data.overview.avgPosition.toFixed(1)}
+        icon={Hash}
+      />
+      </div>
+    </>
+  );
+};
+
+export const GSCQueriesWidget = () => {
+  const { data } = useGSCData();
+  
+  return (
+    <DashboardCard title="Top Queries" subtitle="Best performing search queries">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left text-xs font-medium text-muted-foreground pb-3">Query</th>
+              <th className="text-right text-xs font-medium text-muted-foreground pb-3">Clicks</th>
+              <th className="text-right text-xs font-medium text-muted-foreground pb-3">CTR</th>
+              <th className="text-right text-xs font-medium text-muted-foreground pb-3">Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.topQueries.map((query) => (
             <tr key={query.query} className="border-b border-border/50 last:border-0">
               <td className="py-3 text-sm text-foreground truncate max-w-40">{query.query}</td>
               <td className="py-3 text-sm text-right text-foreground">{query.clicks.toLocaleString()}</td>
               <td className="py-3 text-sm text-right text-foreground">{query.ctr}%</td>
               <td className="py-3 text-sm text-right text-foreground">{query.position.toFixed(1)}</td>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </DashboardCard>
-);
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </DashboardCard>
+  );
+};
 
-export const GSCPagesWidget = () => (
-  <DashboardCard title="Top Pages" subtitle="Best performing pages">
-    <div className="space-y-3">
-      {data.topPages.map((page) => (
+export const GSCPagesWidget = () => {
+  const { data } = useGSCData();
+  
+  return (
+    <DashboardCard title="Top Pages" subtitle="Best performing pages">
+      <div className="space-y-3">
+        {data.topPages.map((page) => (
         <div key={page.page} className="flex items-center justify-between">
           <span className="text-sm text-foreground truncate max-w-40">{page.page}</span>
           <div className="flex items-center gap-4">
@@ -75,44 +143,50 @@ export const GSCPagesWidget = () => (
       ))}
     </div>
   </DashboardCard>
-);
+  );
+};
 
-export const GSCIndexingWidget = () => (
-  <DashboardCard title="Indexing Status" subtitle="Page coverage overview">
-    <div className="grid grid-cols-2 gap-4">
-      <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-        <div className="flex items-center gap-2 mb-2">
-          <CheckCircle className="w-4 h-4 text-success" />
-          <span className="text-sm text-success">Indexed</span>
+export const GSCIndexingWidget = () => {
+  const { data } = useGSCData();
+  
+  return (
+    <DashboardCard title="Indexing Status" subtitle="Page coverage overview">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-3 rounded-lg bg-success/10 border border-success/20">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle className="w-4 h-4 text-success" />
+            <span className="text-sm text-success">Indexed</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">{data.indexingStatus.indexed.toLocaleString()}</p>
         </div>
-        <p className="text-2xl font-bold text-foreground">{data.indexingStatus.indexed.toLocaleString()}</p>
-      </div>
-      <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="w-4 h-4 text-warning" />
-          <span className="text-sm text-warning">Not Indexed</span>
+        <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="w-4 h-4 text-warning" />
+            <span className="text-sm text-warning">Not Indexed</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">{data.indexingStatus.notIndexed}</p>
         </div>
-        <p className="text-2xl font-bold text-foreground">{data.indexingStatus.notIndexed}</p>
-      </div>
-      <div className="p-3 rounded-lg bg-info/10 border border-info/20">
-        <div className="flex items-center gap-2 mb-2">
-          <Eye className="w-4 h-4 text-info" />
-          <span className="text-sm text-info">Crawled</span>
+        <div className="p-3 rounded-lg bg-info/10 border border-info/20">
+          <div className="flex items-center gap-2 mb-2">
+            <Eye className="w-4 h-4 text-info" />
+            <span className="text-sm text-info">Crawled</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">{data.indexingStatus.crawled.toLocaleString()}</p>
         </div>
-        <p className="text-2xl font-bold text-foreground">{data.indexingStatus.crawled.toLocaleString()}</p>
-      </div>
-      <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="w-4 h-4 text-destructive" />
-          <span className="text-sm text-destructive">Errors</span>
+        <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="w-4 h-4 text-destructive" />
+            <span className="text-sm text-destructive">Errors</span>
+          </div>
+          <p className="text-2xl font-bold text-foreground">{data.indexingStatus.errors}</p>
         </div>
-        <p className="text-2xl font-bold text-foreground">{data.indexingStatus.errors}</p>
       </div>
-    </div>
-  </DashboardCard>
-);
+    </DashboardCard>
+  );
+};
 
 export const GSCVitalsWidget = () => {
+  const { data } = useGSCData();
   const vitals = [
     { key: 'lcp', label: 'LCP', value: `${data.coreWebVitals.lcp.value}s`, status: data.coreWebVitals.lcp.status, icon: Clock },
     { key: 'fid', label: 'FID', value: `${data.coreWebVitals.fid.value}ms`, status: data.coreWebVitals.fid.status, icon: Zap },
@@ -149,11 +223,14 @@ export const GSCVitalsWidget = () => {
   );
 };
 
-export const GSCClicksChartWidget = () => (
-  <DashboardCard title="Clicks Over Time" subtitle="Weekly performance">
-    <div className="h-40">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data.clicksOverTime}>
+export const GSCClicksChartWidget = () => {
+  const { data } = useGSCData();
+  
+  return (
+    <DashboardCard title="Clicks Over Time" subtitle="Weekly performance">
+      <div className="h-40">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data.clicksOverTime}>
           <XAxis
             dataKey="date"
             axisLine={false}
@@ -179,8 +256,9 @@ export const GSCClicksChartWidget = () => (
             strokeWidth={2}
             dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
           />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  </DashboardCard>
-);
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </DashboardCard>
+  );
+};
