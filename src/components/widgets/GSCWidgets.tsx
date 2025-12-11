@@ -6,7 +6,7 @@ import { getGSCData } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { StatCard } from '../dashboard/StatCard';
 import { MousePointer, Eye, Percent, Hash, CheckCircle, AlertCircle, Clock, Zap } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { cn } from '@/lib/utils';
 
 const useGSCData = () => {
@@ -227,8 +227,8 @@ export const GSCClicksChartWidget = () => {
   const { data } = useGSCData();
   
   return (
-    <DashboardCard title="Clicks Over Time" subtitle="Weekly performance">
-      <div className="h-40">
+    <DashboardCard title="Clicks" subtitle="Clicks over time">
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data.clicksOverTime}>
           <XAxis
@@ -248,6 +248,24 @@ export const GSCClicksChartWidget = () => {
               border: '1px solid hsl(var(--border))',
               borderRadius: '8px',
             }}
+          />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="clicks"
+            stroke="hsl(var(--primary))"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            name="Clicks"
+          />
+          <Line
+            type="monotone"
+            dataKey="previous"
+            stroke="hsl(var(--muted-foreground))"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            dot={{ r: 4 }}
+            name="Clicks (previous year)"
           />
           <Line
             type="monotone"
