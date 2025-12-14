@@ -121,19 +121,24 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold text-foreground mb-4">Custom Dashboards</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {customDashboards.map((dashboard) => (
-                <DashboardCard
+                <div
                   key={dashboard.id}
-                  title={dashboard.name}
-                  subtitle={`${dashboard.widgets.length} widgets`}
+                  onClick={() => router.push(`/dashboard/view/${dashboard.id}`)}
                   className="cursor-pointer"
                 >
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Layers className="w-4 h-4" />
-                    <span className="text-sm">
-                      Created {dashboard.createdAt.toLocaleDateString()}
-                    </span>
-                  </div>
-                </DashboardCard>
+                  <DashboardCard
+                    title={dashboard.name}
+                    subtitle={`${dashboard.widgets.length} widgets`}
+                    className="hover:shadow-lg transition-shadow"
+                  >
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Layers className="w-4 h-4" />
+                      <span className="text-sm">
+                        Created {dashboard.createdAt.toLocaleDateString()}
+                      </span>
+                    </div>
+                  </DashboardCard>
+                </div>
               ))}
             </div>
           </div>

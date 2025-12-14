@@ -66,6 +66,21 @@ export async function fetchAdsData(startDate?: Date, endDate?: Date) {
   return response.json();
 }
 
+export async function fetchSheetsData(sheetId: string, range?: string) {
+  const params = new URLSearchParams();
+  params.append('sheetId', sheetId);
+  if (range) {
+    params.append('range', range);
+  }
+  
+  const response = await fetch(`/api/sheets/data?${params.toString()}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Failed to fetch Google Sheets data: ${response.status}`);
+  }
+  return response.json();
+}
+
 export async function checkConnectionStatus(service: 'ga4' | 'gsc' | 'ads'): Promise<boolean> {
   try {
     if (service === 'ga4') {

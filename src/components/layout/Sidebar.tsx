@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ const navItems = [
   { path: '/dashboard/analytics', label: 'Google Analytics', icon: BarChart3 },
   { path: '/dashboard/search-console', label: 'Search Console', icon: Search },
   { path: '/dashboard/ads', label: 'Google Ads', icon: DollarSign },
+  { path: '/dashboard/sheets', label: 'Google Sheets', icon: FileSpreadsheet },
   { path: '/dashboard/builder', label: 'Dashboard Builder', icon: Layers },
   { path: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];

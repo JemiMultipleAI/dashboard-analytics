@@ -79,14 +79,19 @@ export default function DashboardBuilder() {
     addDashboard({
       id: `dashboard-${Date.now()}`,
       name: dashboardName,
-      widgets: widgets.map((w, i) => ({
-        id: w.id,
-        type: w.type,
-        x: 0,
-        y: i,
-        w: 1,
-        h: 1,
-      })),
+      widgets: widgets.map((w, i) => {
+        // Arrange widgets in a 2-column grid with better default sizes
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        return {
+          id: w.id,
+          type: w.type,
+          x: col * 6, // 6 columns per widget (half width)
+          y: row * 4, // 4 rows per widget
+          w: 6, // Half width (6 out of 12 columns)
+          h: 4, // Default height of 4 rows
+        };
+      }),
       createdAt: new Date(),
     });
 
