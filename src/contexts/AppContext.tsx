@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 interface ConnectedAccounts {
   ga4: boolean;
@@ -41,13 +41,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [customDashboards, setCustomDashboards] = useState<CustomDashboard[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const connectAccount = (account: keyof ConnectedAccounts) => {
-    setConnectedAccounts((prev) => ({ ...prev, [account]: true }));
-  };
+  const connectAccount = useCallback((account: keyof ConnectedAccounts) => {
+    setConnectedAccounts((prev) => {
+      // Only update if not already connected to prevent unnecessary re-renders
+      if (prev[account]) return prev;
+      return { ...prev, [account]: true };
+    });
+  }, []);
 
-  const disconnectAccount = (account: keyof ConnectedAccounts) => {
-    setConnectedAccounts((prev) => ({ ...prev, [account]: false }));
-  };
+  const disconnectAccount = useCallback((account: keyof ConnectedAccounts) => {
+    setConnectedAccounts((prev) => {
+      // Only update if currently connected
+      if (!prev[account]) return prev;
+      return { ...prev, [account]: false };
+    });
+  }, []);
 
   const addDashboard = (dashboard: CustomDashboard) => {
     setCustomDashboards((prev) => [...prev, dashboard]);
