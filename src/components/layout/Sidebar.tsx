@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  MessageCircle,
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const navItems = [
   { path: '/dashboard/search-console', label: 'Search Console', icon: Search },
   { path: '/dashboard/ads', label: 'Google Ads', icon: DollarSign },
   { path: '/dashboard/builder', label: 'Dashboard Builder', icon: Layers },
+  { path: '/dashboard/chat', label: 'Chat & Webhook', icon: MessageCircle },
   { path: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
