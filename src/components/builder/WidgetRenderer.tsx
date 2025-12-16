@@ -8,12 +8,35 @@ import {
   GA4DailyUsersWidget,
 } from '../widgets/GA4Widgets';
 import {
+  KeyEventsSummaryWidget,
+  KeyEventsTrendWidget,
+  KeyEventsBySourceWidget,
+  KeyEventBreakdownWidget,
+} from '../widgets/KeyEventsWidgets';
+import {
+  LandingPagesServiceWidget,
+  LandingPagesBlogWidget,
+} from '../widgets/LandingPagesWidgets';
+import {
+  AudienceByStateWidget,
+  AudienceAgeWidget,
+  AudienceGenderWidget,
+  AudienceLocationEventsWidget,
+} from '../widgets/AudienceWidgets';
+import {
+  TrafficSourceWidget,
+  SessionsTrendWidget,
+  OrganicSessionsTrendWidget,
+} from '../widgets/TrafficWidgets';
+import {
   GSCQueriesWidget,
   GSCPagesWidget,
   GSCIndexingWidget,
   GSCVitalsWidget,
   GSCClicksChartWidget,
 } from '../widgets/GSCWidgets';
+import { KeywordPositionsWidget } from '../widgets/KeywordPositionsWidget';
+import { GSCImpressionsChartWidget } from '../widgets/GSCImpressionsWidget';
 import {
   AdsCampaignsWidget,
   AdsKeywordsWidget,
@@ -46,6 +69,35 @@ export const WidgetRenderer = ({ type }: WidgetRendererProps) => {
       return <GA4DevicesWidget />;
     case 'ga4-daily-users':
       return <GA4DailyUsersWidget />;
+    case 'ga4-key-events-summary':
+      return <KeyEventsSummaryWidget />;
+    case 'ga4-key-events-trend':
+      return <KeyEventsTrendWidget />;
+    case 'ga4-key-events-source':
+      return <KeyEventsBySourceWidget />;
+    case 'ga4-key-events-breakdown':
+      return <KeyEventBreakdownWidget />;
+    case 'ga4-landing-pages':
+      return (
+        <div className="space-y-4">
+          <LandingPagesServiceWidget />
+          <LandingPagesBlogWidget />
+        </div>
+      );
+    case 'ga4-traffic-source':
+      return <TrafficSourceWidget />;
+    case 'ga4-sessions-trend':
+      return <SessionsTrendWidget />;
+    case 'ga4-organic-sessions-trend':
+      return <OrganicSessionsTrendWidget />;
+    case 'ga4-audience-geography':
+      return <AudienceByStateWidget />;
+    case 'ga4-audience-age':
+      return <AudienceAgeWidget />;
+    case 'ga4-audience-gender':
+      return <AudienceGenderWidget />;
+    case 'ga4-audience-location-events':
+      return <AudienceLocationEventsWidget />;
 
     // GSC Widgets
     case 'gsc-overview':
@@ -73,6 +125,10 @@ export const WidgetRenderer = ({ type }: WidgetRendererProps) => {
       return <GSCVitalsWidget />;
     case 'gsc-clicks-chart':
       return <GSCClicksChartWidget />;
+    case 'gsc-keyword-positions':
+      return <KeywordPositionsWidget />;
+    case 'gsc-impressions-chart':
+      return <GSCImpressionsChartWidget />;
 
     // Ads Widgets
     case 'ads-overview':

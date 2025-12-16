@@ -4,6 +4,135 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* React Grid Layout Styles */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, width, height;
+}
+
+.react-grid-item.resizing {
+  transition: none;
+  z-index: 1000 !important;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 1000 !important;
+  will-change: transform;
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: hsl(var(--primary) / 0.2);
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  border-radius: 0.75rem;
+}
+
+/* Resize Handle Styles */
+.react-resizable-handle-se {
+  position: absolute !important;
+  width: 28px !important;
+  height: 28px !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  background: hsl(var(--primary) / 0.15) !important;
+  background-image: none !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  cursor: se-resize !important;
+  z-index: 1003 !important;
+  opacity: 1 !important;
+  transition: background-color 0.2s, transform 0.2s !important;
+  pointer-events: auto !important;
+  border-radius: 0 0 0.75rem 0 !important;
+  border: 2px solid hsl(var(--primary) / 0.4) !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+}
+
+.react-resizable-handle {
+  position: absolute !important;
+  width: 28px !important;
+  height: 28px !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  background: hsl(var(--primary) / 0.15) !important;
+  background-image: none !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  cursor: se-resize !important;
+  z-index: 1003 !important;
+  opacity: 1 !important;
+  transition: background-color 0.2s, transform 0.2s !important;
+  pointer-events: auto !important;
+  border-radius: 0 0 0.75rem 0 !important;
+  border: 2px solid hsl(var(--primary) / 0.4) !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+}
+
+.react-resizable-handle::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 4px !important;
+  right: 4px !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-style: solid !important;
+  border-width: 0 0 10px 10px !important;
+  border-color: transparent transparent hsl(var(--primary)) transparent !important;
+}
+
+.react-resizable-handle:hover,
+.react-resizable-handle-se:hover {
+  background-color: hsl(var(--primary) / 0.4) !important;
+  transform: scale(1.1) !important;
+  border-color: hsl(var(--primary) / 0.7) !important;
+}
+
+.react-grid-item:hover .react-resizable-handle,
+.react-grid-item:hover .react-resizable-handle-se {
+  opacity: 1 !important;
+  background-color: hsl(var(--primary) / 0.3) !important;
+}
+
+.react-grid-item.resizing .react-resizable-handle,
+.react-grid-item.resizing .react-resizable-handle-se {
+  background-color: hsl(var(--primary) / 0.5) !important;
+  border-color: hsl(var(--primary) / 0.8) !important;
+}
+
+/* Ensure the handle is always visible and on top */
+.react-grid-item {
+  overflow: visible !important;
+}
+
+.react-grid-item > div {
+  overflow: visible !important;
+  position: relative !important;
+}
+
 @layer base {
   :root {
     --background: 210 40% 98%;

@@ -8,7 +8,19 @@ import { toast } from 'sonner';
 
 export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const chatUrl = process.env.NEXT_PUBLIC_N8N_CHAT_URL || 'https://n8n.srv1068103.hstgr.cloud/webhook/54babaa5-d209-483e-973b-40f0925f88e8/chat';
+  const chatUrl = process.env.NEXT_PUBLIC_N8N_CHAT_URL;
+  
+  if (!chatUrl) {
+    return (
+      <DashboardLayout title="Chat & Webhook">
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive">
+            <p className="text-sm">⚠️ Chat URL is not configured. Please set NEXT_PUBLIC_N8N_CHAT_URL in your environment variables.</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const handleTriggerWebhook = async () => {
     setIsLoading(true);
