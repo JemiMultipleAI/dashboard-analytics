@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState, useEffect } from 'react';
-import GridLayout, { Layout } from 'react-grid-layout';
+import GridLayoutComponent, { Layout, LayoutItem } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,7 @@ interface DashboardGridProps {
     w: number;
     h: number;
   }>;
-  onLayoutChange: (layout: Layout[]) => void;
+  onLayoutChange: (layout: Layout) => void;
   children: (widget: { id: string; type: string }) => React.ReactNode;
   className?: string;
 }
@@ -60,14 +60,14 @@ export const DashboardGrid = ({
   }, []);
 
   const handleLayoutChange = useCallback(
-    (layout: Layout[]) => {
+    (layout: Layout) => {
       onLayoutChange(layout);
     },
     [onLayoutChange]
   );
 
   // Convert widgets to grid layout format
-  const layout: Layout[] = widgets.map((widget) => ({
+  const layout: Layout = widgets.map((widget): LayoutItem => ({
     i: widget.id,
     x: widget.x,
     y: widget.y,
@@ -90,6 +90,8 @@ export const DashboardGrid = ({
       </div>
     );
   }
+
+  const GridLayout = GridLayoutComponent as any;
 
   return (
     <div className={cn('relative', className)}>

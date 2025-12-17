@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AccountConnectionCard } from '@/components/dashboard/AccountConnectionCard';
 import { useApp } from '@/contexts/AppContext';
@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { connectedAccounts, connectAccount, customDashboards } = useApp();
@@ -78,7 +78,7 @@ export default function Dashboard() {
   const connectedCount = Object.values(connectedAccounts).filter(Boolean).length;
 
   return (
-    <DashboardLayout title="Overview">
+    <>
       <div className="space-y-8 animate-fade-in">
         {/* Welcome section */}
         <div className="flex items-start justify-between">
@@ -185,6 +185,16 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <DashboardLayout title="Overview">
+      <Suspense fallback={<div className="p-6">Loading...</div>}>
+        <DashboardContent />
+      </Suspense>
     </DashboardLayout>
   );
 }

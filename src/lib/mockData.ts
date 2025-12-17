@@ -351,7 +351,6 @@ export const getAdsData = () => {
       avgCTR: 4.8,
       roas: 3.2,
       spendTrend: -5,
-      conversionsTrend: 18,
     },
     campaigns: [
       { name: "Brand Awareness", impressions: 185000, clicks: 8900, ctr: 4.81, spend: 3200, avgCPC: 0.36, conversions: 245, status: "active" },

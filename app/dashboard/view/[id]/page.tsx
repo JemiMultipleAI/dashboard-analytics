@@ -22,19 +22,19 @@ export default function ViewDashboard() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const handleLayoutChange = useCallback(
-    (layout: Layout[]) => {
+    (layout: Layout) => {
       if (!dashboard) return;
       
       // Update widgets with new positions and sizes
       const updatedWidgets = dashboard.widgets.map((widget) => {
-        const layoutItem = layout.find((item) => item.i === widget.id);
+        const layoutItem = layout.find((item) => (item as any).i === widget.id);
         if (layoutItem) {
           return {
             ...widget,
-            x: layoutItem.x,
-            y: layoutItem.y,
-            w: layoutItem.w,
-            h: layoutItem.h,
+            x: (layoutItem as any).x,
+            y: (layoutItem as any).y,
+            w: (layoutItem as any).w,
+            h: (layoutItem as any).h,
           };
         }
         return widget;
