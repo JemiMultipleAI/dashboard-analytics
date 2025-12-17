@@ -21,30 +21,10 @@ export default function ViewDashboard() {
   const dashboard = customDashboards.find((d) => d.id === dashboardId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  if (!dashboard) {
-    return (
-      <DashboardLayout title="Dashboard Not Found">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">Dashboard not found</p>
-          <Button onClick={() => router.push('/dashboard')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Overview
-          </Button>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this dashboard?')) {
-      deleteDashboard(dashboardId);
-      toast.success('Dashboard deleted');
-      router.push('/dashboard');
-    }
-  };
-
   const handleLayoutChange = useCallback(
     (layout: Layout[]) => {
+      if (!dashboard) return;
+      
       // Update widgets with new positions and sizes
       const updatedWidgets = dashboard.widgets.map((widget) => {
         const layoutItem = layout.find((item) => item.i === widget.id);
@@ -74,6 +54,28 @@ export default function ViewDashboard() {
     },
     [dashboard, dashboardId, updateDashboard]
   );
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this dashboard?')) {
+      deleteDashboard(dashboardId);
+      toast.success('Dashboard deleted');
+      router.push('/dashboard');
+    }
+  };
+
+  if (!dashboard) {
+    return (
+      <DashboardLayout title="Dashboard Not Found">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">Dashboard not found</p>
+          <Button onClick={() => router.push('/dashboard')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Overview
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title={dashboard.name}>
