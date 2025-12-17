@@ -20,16 +20,27 @@ import {
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 
-const navItems = [
-  { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { path: '/dashboard/analytics', label: 'Google Analytics', icon: BarChart3 },
-  { path: '/dashboard/search-console', label: 'Search Console', icon: Search },
-  { path: '/dashboard/ads', label: 'Google Ads', icon: DollarSign },
-  { path: '/dashboard/sheets', label: 'Google Sheets', icon: FileSpreadsheet },
-  { path: '/dashboard/builder', label: 'Dashboard Builder', icon: Layers },
-  { path: '/dashboard/chat', label: 'Chat & Webhook', icon: MessageCircle },
-  { path: '/dashboard/settings', label: 'Settings', icon: Settings },
+const navSections = [
+  {
+    label: 'Dashboards',
+    items: [
+      { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+      { path: '/dashboard/analytics', label: 'Google Analytics', icon: BarChart3 },
+      { path: '/dashboard/search-console', label: 'Search Console', icon: Search },
+      { path: '/dashboard/ads', label: 'Google Ads', icon: DollarSign },
+      { path: '/dashboard/builder', label: 'Dashboard Builder', icon: Layers },
+    ],
+  },
+  {
+    label: 'SEO Agents',
+    items: [
+      { path: '/dashboard/sheets', label: 'Smart SEO', icon: FileSpreadsheet },
+      { path: '/dashboard/chat', label: 'Chat', icon: MessageCircle },
+    ],
+  },
 ];
+
+const settingsItem = { path: '/dashboard/settings', label: 'Settings', icon: Settings };
 
 export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -70,29 +81,58 @@ export const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          const Icon = item.icon;
+      <nav className="flex-1 py-4 px-2 space-y-6 overflow-y-auto">
+        {navSections.map((section) => (
+          <div key={section.label} className="space-y-1">
+            {!isCollapsed && (
+              <div className="px-3 mb-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {section.label}
+                </span>
+              </div>
+            )}
+            {section.items.map((item) => {
+              const isActive = pathname === item.path;
+              const Icon = item.icon;
 
-          return (
-            <Link
-              key={item.path}
-              href={item.path}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-glow'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              )}
-            >
-              <Icon className={cn('w-5 h-5 flex-shrink-0', isActive && 'text-primary-foreground')} />
-              {!isCollapsed && (
-                <span className="text-sm font-medium truncate">{item.label}</span>
-              )}
-            </Link>
-          );
-        })}
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-glow'
+                      : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                  )}
+                >
+                  <Icon className={cn('w-5 h-5 flex-shrink-0', isActive && 'text-primary-foreground')} />
+                  {!isCollapsed && (
+                    <span className="text-sm font-medium truncate">{item.label}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+        
+        {/* Settings */}
+        <div className="pt-4 border-t border-border">
+          <Link
+            href={settingsItem.path}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group',
+              pathname === settingsItem.path
+                ? 'bg-primary text-primary-foreground shadow-glow'
+                : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+            )}
+          >
+            <Settings className={cn('w-5 h-5 flex-shrink-0', pathname === settingsItem.path && 'text-primary-foreground')} />
+            {!isCollapsed && (
+              <span className="text-sm font-medium truncate">{settingsItem.label}</span>
+            )}
+          </Link>
+        </div>
       </nav>
 
       {/* Logout */}

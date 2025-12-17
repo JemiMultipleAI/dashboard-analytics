@@ -74,6 +74,7 @@ export async function fetchSheetsData(sheetId: string, range?: string) {
   }
   
   const response = await fetch(`/api/sheets/data?${params.toString()}`);
+  console.log("response", response);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `Failed to fetch Google Sheets data: ${response.status}`);

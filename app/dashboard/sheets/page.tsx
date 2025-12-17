@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, FileSpreadsheet } from 'lucide-react';
+import { Loader2, FileSpreadsheet, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SheetsDashboard() {
@@ -21,6 +21,7 @@ export default function SheetsDashboard() {
   });
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isWebhookLoading, setIsWebhookLoading] = useState(false);
 
   // Load sheet ID from localStorage on mount
   useEffect(() => {
@@ -30,8 +31,10 @@ export default function SheetsDashboard() {
     }
   }, []);
 
-  const handleLoadSheet = async () => {
-    if (!sheetId.trim()) {
+  const handleLoadSheet = async (sheetIdOrUrl?: string) => {
+    const idToUse = sheetIdOrUrl || sheetId;
+    
+    if (!idToUse.trim()) {
       toast.error('Please enter a Google Sheet ID');
       return;
     }
@@ -39,15 +42,16 @@ export default function SheetsDashboard() {
     setLoading(true);
     try {
       // Extract sheet ID from URL if full URL is provided
-      let extractedSheetId = sheetId;
-      if (sheetId.includes('/spreadsheets/d/')) {
-        const match = sheetId.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      let extractedSheetId = idToUse;
+      if (idToUse.includes('/spreadsheets/d/')) {
+        const match = idToUse.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
         if (match) {
           extractedSheetId = match[1];
         }
       }
 
       const data = await fetchSheetsData(extractedSheetId);
+      console.log("sheet data", data);
       
       setColumns(data.columns || {
         column1: [],
@@ -64,6 +68,36 @@ export default function SheetsDashboard() {
       toast.error(error.message || 'Failed to load sheet');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTriggerWebhook = async () => {
+    console.log('triggered');
+    setIsWebhookLoading(true);
+    try {
+      // const response = await fetch('/api/webhook', {
+      //   method: 'GET',
+      // });
+
+      // const data = await response.json();
+
+      // if (data.success) {
+      //   toast.success('Webhook triggered successfully!');
+      // } else {
+      //   toast.error('Failed to trigger webhook');
+      // }
+
+      // Wait 7 seconds, then automatically load the sheet
+      // toast.info('Loading sheet in 7 seconds...');
+      setTimeout(async () => {
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/11Ar45A5gR_EdZ9zjJJyMNPo6EVHJmQX-ErjsDX-_BLQ/edit?gid=0#gid=0';
+        await handleLoadSheet(sheetUrl);
+      }, 1000);
+    } catch (error) {
+      console.error('Error triggering webhook:', error);
+      toast.error('Error triggering webhook');
+    } finally {
+      setIsWebhookLoading(false);
     }
   };
 
@@ -93,50 +127,38 @@ export default function SheetsDashboard() {
   };
 
   return (
-    <DashboardLayout title="Google Sheets">
+    <DashboardLayout title="Smart SEO">
       <div className="space-y-6">
-        {/* Sheet ID Input */}
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label htmlFor="sheet-id" className="block text-sm font-medium mb-2">
-                Google Sheet ID or URL
-              </label>
-              <Input
-                id="sheet-id"
-                type="text"
-                placeholder="Enter Sheet ID or full URL"
-                value={sheetId}
-                onChange={(e) => setSheetId(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleLoadSheet();
-                  }
-                }}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Example: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
-              </p>
+        {/* Webhook Trigger Section */}
+        <div className="bg-card rounded-xl border border-border p-6 shadow-card">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Send className="w-5 h-5 text-primary" />
             </div>
-            <Button
-              onClick={handleLoadSheet}
-              disabled={loading || !sheetId.trim()}
-              className="min-w-[120px]"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <FileSpreadsheet className="w-4 h-4 mr-2" />
-                  Load Sheet
-                </>
-              )}
-            </Button>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">SEO Magic</h2>
+              <p className="text-sm text-muted-foreground">Initiate the magic</p>
+            </div>
           </div>
+          <Button
+            onClick={handleTriggerWebhook}
+            disabled={isWebhookLoading}
+            className="gradient-primary text-primary-foreground hover:opacity-90"
+          >
+            {isWebhookLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Initiating...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 mr-2" />
+                Initiate
+              </>
+            )}
+          </Button>
         </div>
+
 
         {/* Tabs with Column Data */}
         {isLoaded && (
@@ -149,25 +171,25 @@ export default function SheetsDashboard() {
                     value="column1"
                     className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
-                    Column 1
+                    {columns.column1[0] || 'Column 1'}
                   </TabsTrigger>
                   <TabsTrigger
                     value="column2"
                     className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
-                    Column 2
+                    {columns.column2[0] || 'Column 1'}
                   </TabsTrigger>
                   <TabsTrigger
                     value="column3"
                     className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
-                    Column 3
+                    {columns.column3[0] || 'Column 1'}
                   </TabsTrigger>
                   <TabsTrigger
                     value="column4"
                     className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                   >
-                    Column 4
+                    {columns.column4[0] || 'Column 1'}
                   </TabsTrigger>
                 </TabsList>
 
