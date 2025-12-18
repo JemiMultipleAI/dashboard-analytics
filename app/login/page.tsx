@@ -6,26 +6,36 @@ import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Layers, Chrome } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Hardcoded test user credentials
+const TEST_USER = {
+  email: 'testuser@gmail.com',
+  password: 'Test1234!',
+};
+
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
   const { setIsAuthenticated } = useApp();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAuthenticated(true);
-    toast.success(isLogin ? 'Welcome back!' : 'Account created successfully!');
-    router.push('/dashboard');
-  };
+    setError('');
 
-  const handleGoogleAuth = () => {
+    // Validate credentials
+    if (email.trim() !== TEST_USER.email || password !== TEST_USER.password) {
+      setError('Invalid email or password. Please try again.');
+      toast.error('Invalid credentials');
+      return;
+    }
+
+    // Successful login
     setIsAuthenticated(true);
-    toast.success('Signed in with Google');
+    toast.success('Welcome back!');
     router.push('/dashboard');
   };
 
@@ -34,15 +44,28 @@ export default function Login() {
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 gradient-primary items-center justify-center p-12">
         <div className="max-w-md text-center">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center mb-8">
-            <Layers className="w-10 h-10 text-primary-foreground" />
+          {/* Logo above title - larger and oval/rounded */}
+          <div className="mb-8 flex justify-center">
+            <div className="relative w-96 h-40 overflow-hidden" style={{ borderRadius: '9999px' }}>
+              <img
+                src="/logo.png"
+                alt="White Chalk Road Logo"
+                className="w-full h-full object-contain p-4"
+                style={{ borderRadius: '9999px' }}
+                onError={(e) => {
+                  // Fallback if logo file doesn't exist yet
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-primary-foreground mb-4">
+          
+          <h1 className="text-4xl font-bold text-primary-foreground mb-6">
             Unified Analytics
           </h1>
-          <p className="text-lg text-primary-foreground/80">
-            Connect Google Analytics, Search Console, and Google Ads in one powerful dashboard.
-            Build custom views and gain insights faster.
+          <p className="text-lg text-primary-foreground/80 text-left">
+            Connect Google Analytics, Search Console, and Google Ads in one powerful dashboard. Build custom views and gain insights faster.
           </p>
         </div>
       </div>
@@ -50,46 +73,42 @@ export default function Login() {
       {/* Right side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md animate-fade-in">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-              <Layers className="w-5 h-5 text-primary-foreground" />
+          {/* Mobile logo - larger and oval/rounded */}
+          <div className="lg:hidden mb-8">
+            <div className="flex justify-center mb-6">
+              <div className="relative w-80 h-36 overflow-hidden" style={{ borderRadius: '9999px' }}>
+                <img
+                  src="/logo.png"
+                  alt="White Chalk Road Logo"
+                  className="w-full h-full object-contain p-4"
+                  style={{ borderRadius: '9999px' }}
+                  onError={(e) => {
+                    // Fallback if logo file doesn't exist yet
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              </div>
             </div>
-            <span className="text-xl font-bold text-foreground">UA</span>
           </div>
 
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-foreground">
-              {isLogin ? 'Welcome back' : 'Create your account'}
+              Welcome back
             </h2>
             <p className="text-muted-foreground mt-2">
-              {isLogin
-                ? 'Enter your credentials to access your dashboard'
-                : 'Start managing your marketing data today'}
+              Enter your credentials to access your dashboard
             </p>
-          </div>
-
-          {/* Google Auth */}
-          <Button
-            variant="outline"
-            className="w-full h-12 mb-6"
-            onClick={handleGoogleAuth}
-          >
-            <Chrome className="w-5 h-5 mr-2" />
-            Continue with Google
-          </Button>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
           </div>
 
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -97,7 +116,10 @@ export default function Login() {
                 type="email"
                 placeholder="name@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
                 className="h-12"
                 required
               />
@@ -109,27 +131,19 @@ export default function Login() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
                 className="h-12"
                 required
               />
             </div>
 
             <Button type="submit" className="w-full h-12 gradient-primary text-primary-foreground hover:opacity-90">
-              {isLogin ? 'Sign In' : 'Create Account'}
+              Sign In
             </Button>
           </form>
-
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="ml-1 text-primary hover:underline font-medium"
-            >
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
         </div>
       </div>
     </div>

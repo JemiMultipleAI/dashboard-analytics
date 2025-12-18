@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description: 'Unified Analytics brings together Google Analytics, Search Console, and Google Ads data into one powerful dashboard. Build custom views and gain marketing insights faster.',
   keywords: 'analytics dashboard, google analytics, search console, google ads, analytics platform, unified analytics',
   authors: [{ name: 'Unified Analytics' }],
+  // No icons metadata - will use default browser icon
   openGraph: {
     title: 'Unified Analytics - All Your Marketing Data in One Place',
     description: 'Connect Google Analytics, Search Console, and Google Ads in one powerful dashboard. Build custom views and gain insights faster.',
