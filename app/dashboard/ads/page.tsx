@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DateRange } from 'react-day-picker';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
@@ -14,6 +14,10 @@ import {
 } from '@/components/widgets/AdsWidgets';
 import { useApp } from '@/contexts/AppContext';
 import { DateRangePicker } from '@/components/dashboard/DateRangePicker';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { fetchAdsData } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function AdsDashboard() {
   const { connectedAccounts } = useApp();
@@ -27,6 +31,32 @@ export default function AdsDashboard() {
     from: defaultStartDate,
     to: defaultEndDate,
   });
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (!connectedAccounts.ads || !dateRange?.from || !dateRange?.to) {
+      return;
+    }
+
+    try {
+      setRefreshing(true);
+      // Clear cache before refreshing
+      const { clearCache } = await import('@/lib/cache');
+      const dateRangeKey = `${dateRange.from.toISOString().split('T')[0]}_${dateRange.to.toISOString().split('T')[0]}`;
+      clearCache(`ads_data_${dateRangeKey}`);
+      clearCache('ads_data_default'); // Also clear default cache
+      
+      await fetchAdsData(dateRange.from, dateRange.to, true);
+      toast.success('Data refreshed successfully');
+      // Force widgets to re-fetch by triggering a re-render
+      window.dispatchEvent(new Event('ads-data-refresh'));
+    } catch (err: any) {
+      console.error('Error refreshing Ads data:', err);
+      toast.error('Failed to refresh data');
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
   return (
     <DashboardLayout title="Google Ads">
@@ -37,16 +67,30 @@ export default function AdsDashboard() {
           </div>
         )}
 
-        {/* Date Range Picker */}
+        {/* Date Range Picker and Refresh Button */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Google Ads Performance</h2>
             <p className="text-sm text-muted-foreground mt-1">Select a date range to view performance metrics</p>
           </div>
-          <DateRangePicker
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-          />
+          <div className="flex items-center gap-3">
+            {connectedAccounts.ads && (
+              <Button
+                onClick={handleRefresh}
+                disabled={refreshing || !dateRange?.from || !dateRange?.to}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh Data'}
+              </Button>
+            )}
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+            />
+          </div>
         </div>
 
         {/* Error message will be shown by widgets if there's an API error */}

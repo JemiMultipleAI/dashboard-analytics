@@ -115,38 +115,38 @@ export const AdsOverviewWidget = ({ dateRange }: AdsWidgetsProps) => {
           🧪 Showing mock data for testing. {error && <span className="ml-1">({error})</span>}
         </div>
       )}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <StatCard
           title="Clicks"
           value={data.overview.clicks?.toLocaleString() || '0'}
           trend={data.overview.clicksTrend}
           trendValue={data.overview.clicksTrend !== undefined ? `${data.overview.clicksTrend > 0 ? '+' : ''}${data.overview.clicksTrend.toFixed(1)}%` : undefined}
           icon={MousePointer}
-        />
-        <StatCard
-          title="Conversions"
+    />
+    <StatCard
+      title="Conversions"
           value={data.overview.conversions?.toLocaleString() || data.overview.totalConversions?.toLocaleString() || '0'}
-          trend={data.overview.conversionsTrend}
+      trend={data.overview.conversionsTrend}
           trendValue={data.overview.conversionsTrend !== undefined ? `${data.overview.conversionsTrend > 0 ? '+' : ''}${data.overview.conversionsTrend.toFixed(1)}%` : 'N/A'}
-          icon={Target}
-        />
-        <StatCard
+      icon={Target}
+    />
+    <StatCard
           title="Cost"
           value={`$${data.overview.cost?.toLocaleString() || data.overview.totalSpend?.toLocaleString() || '0.00'}`}
           trend={data.overview.costTrend}
           trendValue={data.overview.costTrend !== undefined ? `${data.overview.costTrend > 0 ? '+' : ''}$${Math.abs(data.overview.costTrend).toFixed(2)}` : undefined}
           icon={DollarSign}
-        />
-        <StatCard
+    />
+    <StatCard
           title="Cost / conv."
           value={`$${data.overview.costPerConversion ? data.overview.costPerConversion.toFixed(2) : '0.00'}`}
           trend={data.overview.costPerConversionTrend}
           trendValue={data.overview.costPerConversionTrend !== undefined ? `${data.overview.costPerConversionTrend > 0 ? '+' : ''}$${Math.abs(data.overview.costPerConversionTrend).toFixed(2)}` : '$0.00'}
           icon={TrendingUp}
-        />
-      </div>
+    />
+  </div>
     </>
-  );
+);
 };
 
 export const AdsCampaignsWidget = ({ dateRange }: AdsWidgetsProps) => {
@@ -175,45 +175,45 @@ export const AdsCampaignsWidget = ({ dateRange }: AdsWidgetsProps) => {
   }
   
   return (
-    <DashboardCard title="Campaign Performance" subtitle="Active and paused campaigns">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left text-xs font-medium text-muted-foreground pb-3">Campaign</th>
+  <DashboardCard title="Campaign Performance" subtitle="Active and paused campaigns">
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-border">
+            <th className="text-left text-xs font-medium text-muted-foreground pb-3">Campaign</th>
               <th className="text-right text-xs font-medium text-muted-foreground pb-3">Impressions</th>
-              <th className="text-right text-xs font-medium text-muted-foreground pb-3">Clicks</th>
+            <th className="text-right text-xs font-medium text-muted-foreground pb-3">Clicks</th>
               <th className="text-right text-xs font-medium text-muted-foreground pb-3">CTR</th>
               <th className="text-right text-xs font-medium text-muted-foreground pb-3">Cost</th>
               <th className="text-right text-xs font-medium text-muted-foreground pb-3">Avg. CPC</th>
               <th className="text-right text-xs font-medium text-muted-foreground pb-3">Conversions</th>
-            </tr>
-          </thead>
-          <tbody>
+          </tr>
+        </thead>
+        <tbody>
             {data.campaigns && data.campaigns.length > 0 ? (
               data.campaigns.map((campaign: any) => (
                 <tr key={campaign.name} className="border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors">
                   <td className="py-3 text-sm text-foreground font-medium">{campaign.name}</td>
                   <td className="py-3 text-sm text-right text-foreground">{campaign.impressions?.toLocaleString() || '0'}</td>
-                  <td className="py-3 text-sm text-right text-foreground">{campaign.clicks.toLocaleString()}</td>
+              <td className="py-3 text-sm text-right text-foreground">{campaign.clicks.toLocaleString()}</td>
                   <td className="py-3 text-sm text-right text-foreground">{campaign.ctr ? `${campaign.ctr.toFixed(2)}%` : '0.00%'}</td>
                   <td className="py-3 text-sm text-right text-foreground font-medium">${campaign.spend.toLocaleString()}</td>
                   <td className="py-3 text-sm text-right text-foreground">${campaign.avgCPC ? campaign.avgCPC.toFixed(2) : '0.00'}</td>
                   <td className="py-3 text-sm text-right text-foreground">{campaign.conversions || 0}</td>
                 </tr>
               ))
-            ) : (
+                  ) : (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
                   No campaign data available
-                </td>
-              </tr>
+              </td>
+            </tr>
             )}
-          </tbody>
-        </table>
-      </div>
-    </DashboardCard>
-  );
+        </tbody>
+      </table>
+    </div>
+  </DashboardCard>
+);
 };
 
 export const AdsKeywordsWidget = ({ dateRange }: AdsWidgetsProps) => {
@@ -232,39 +232,39 @@ export const AdsKeywordsWidget = ({ dateRange }: AdsWidgetsProps) => {
   }
   
   return (
-    <DashboardCard title="Keyword Performance" subtitle="Top performing keywords">
-      <div className="space-y-3">
-        {data.keywords.map((keyword) => (
-          <div key={keyword.keyword} className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm text-foreground">{keyword.keyword}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-muted-foreground">{keyword.clicks.toLocaleString()} clicks</span>
-                <span className="text-xs text-muted-foreground">•</span>
-                <span className="text-xs text-muted-foreground">${keyword.cpc} CPC</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-foreground">{keyword.conversions} conv.</p>
-              <div className="flex items-center gap-1 justify-end mt-1">
-                <span className="text-xs text-muted-foreground">Quality:</span>
-                <span
-                  className={cn(
-                    'text-xs font-medium',
-                    keyword.quality >= 8 && 'text-success',
-                    keyword.quality >= 5 && keyword.quality < 8 && 'text-warning',
-                    keyword.quality < 5 && 'text-destructive'
-                  )}
-                >
-                  {keyword.quality}/10
-                </span>
-              </div>
+  <DashboardCard title="Keyword Performance" subtitle="Top performing keywords">
+    <div className="space-y-3">
+      {data.keywords.map((keyword) => (
+        <div key={keyword.keyword} className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-sm text-foreground">{keyword.keyword}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-muted-foreground">{keyword.clicks.toLocaleString()} clicks</span>
+              <span className="text-xs text-muted-foreground">•</span>
+              <span className="text-xs text-muted-foreground">${keyword.cpc} CPC</span>
             </div>
           </div>
-        ))}
-      </div>
-    </DashboardCard>
-  );
+          <div className="text-right">
+            <p className="text-sm font-medium text-foreground">{keyword.conversions} conv.</p>
+            <div className="flex items-center gap-1 justify-end mt-1">
+              <span className="text-xs text-muted-foreground">Quality:</span>
+              <span
+                className={cn(
+                  'text-xs font-medium',
+                  keyword.quality >= 8 && 'text-success',
+                  keyword.quality >= 5 && keyword.quality < 8 && 'text-warning',
+                  keyword.quality < 5 && 'text-destructive'
+                )}
+              >
+                {keyword.quality}/10
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </DashboardCard>
+);
 };
 
 export const AdsRecommendationsWidget = ({ dateRange }: AdsWidgetsProps) => {
@@ -477,34 +477,34 @@ export const AdsSpendChartWidget = ({ dateRange }: AdsWidgetsProps) => {
   }
   
   return (
-    <DashboardCard title="Spend Over Time" subtitle="Daily ad spend">
-      <div className="h-40">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data.spendOverTime}>
-            <XAxis
-              dataKey="date"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-              tickFormatter={(value) => `$${value}`}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-              }}
-              formatter={(value: number) => [`$${value}`, 'Spend']}
-            />
-            <Bar dataKey="spend" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </DashboardCard>
-  );
+  <DashboardCard title="Spend Over Time" subtitle="Daily ad spend">
+    <div className="h-40">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data.spendOverTime}>
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+            tickFormatter={(value) => `$${value}`}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: '8px',
+            }}
+            formatter={(value: number) => [`$${value}`, 'Spend']}
+          />
+          <Bar dataKey="spend" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </DashboardCard>
+);
 };

@@ -26,45 +26,41 @@ export async function GET(request: NextRequest) {
     // Use API key authentication for Google Sheets API (works with public sheets)
     const sheets = google.sheets({ version: 'v4', auth: apiKey });
 
-    // Fetch all data from the sheet
+    // Fetch only first 2 rows from the sheet (row 1 = titles, row 2 = content)
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: range,
+      range: `${range}!A1:F2`, // First 2 rows, columns A-F (6 columns)
     });
 
     const rows = response.data.values || [];
 
     if (rows.length === 0) {
       return NextResponse.json({
-        columns: {
-          column1: [],
-          column2: [],
-          column3: [],
-          column4: [],
-        },
+        tabs: [],
+        content: {},
       });
     }
 
-    // Extract columns (first 4 columns, all rows)
-    const column1: string[] = [];
-    const column2: string[] = [];
-    const column3: string[] = [];
-    const column4: string[] = [];
+    // Row 1 (index 0) = Tab titles
+    // Row 2 (index 1) = Content for each tab
+    const titleRow = rows[0] || [];
+    const contentRow = rows[1] || [];
 
-    rows.forEach((row) => {
-      column1.push(row[0]?.toString() || '');
-      column2.push(row[1]?.toString() || '');
-      column3.push(row[2]?.toString() || '');
-      column4.push(row[3]?.toString() || '');
-    });
+    // Extract 6 columns: titles from row 1, content from row 2
+    const tabs: string[] = [];
+    const content: Record<string, string> = {};
+
+    for (let i = 0; i < 6; i++) {
+      const title = titleRow[i]?.toString().trim() || `Column ${i + 1}`;
+      const contentValue = contentRow[i]?.toString().trim() || '';
+      
+      tabs.push(title);
+      content[`column${i + 1}`] = contentValue;
+    }
 
     return NextResponse.json({
-      columns: {
-        column1,
-        column2,
-        column3,
-        column4,
-      },
+      tabs,
+      content,
     });
   } catch (error: any) {
     console.error('Error fetching Google Sheets data:', error);

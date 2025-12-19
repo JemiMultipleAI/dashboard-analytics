@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 
 interface ConnectedAccounts {
   ga4: boolean;
@@ -32,20 +32,62 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Load connected accounts from localStorage on mount
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccounts>({
-    ga4: false,
-    gsc: false,
-    ads: false,
+  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccounts>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('connectedAccounts');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return { ga4: false, gsc: false, ads: false };
+        }
+      }
+    }
+    return { ga4: false, gsc: false, ads: false };
   });
-  const [customDashboards, setCustomDashboards] = useState<CustomDashboard[]>([]);
+  // Load custom dashboards from localStorage on mount
+  const [customDashboards, setCustomDashboards] = useState<CustomDashboard[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('customDashboards');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // Convert createdAt strings back to Date objects
+          return parsed.map((d: any) => ({
+            ...d,
+            createdAt: new Date(d.createdAt),
+          }));
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Persist connected accounts to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('connectedAccounts', JSON.stringify(connectedAccounts));
+    }
+  }, [connectedAccounts]);
+
+  // Persist custom dashboards to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('customDashboards', JSON.stringify(customDashboards));
+    }
+  }, [customDashboards]);
 
   const connectAccount = useCallback((account: keyof ConnectedAccounts) => {
     setConnectedAccounts((prev) => {
       // Only update if not already connected to prevent unnecessary re-renders
       if (prev[account]) return prev;
-      return { ...prev, [account]: true };
+      const updated = { ...prev, [account]: true };
+      return updated;
     });
   }, []);
 

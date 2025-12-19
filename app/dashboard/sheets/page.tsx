@@ -11,12 +11,8 @@ import { toast } from 'sonner';
 
 export default function SheetsDashboard() {
   const [activeTab, setActiveTab] = useState('column1');
-  const [columns, setColumns] = useState({
-    column1: [] as string[],
-    column2: [] as string[],
-    column3: [] as string[],
-    column4: [] as string[],
-  });
+  const [tabs, setTabs] = useState<string[]>([]);
+  const [content, setContent] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isWebhookLoading, setIsWebhookLoading] = useState(false);
@@ -41,16 +37,16 @@ export default function SheetsDashboard() {
       const data = await fetchSheetsData(extractedSheetId);
       console.log("sheet data", data);
       
-      setColumns(data.columns || {
-        column1: [],
-        column2: [],
-        column3: [],
-        column4: [],
-      });
-      
-      setIsLoaded(true);
-      localStorage.setItem('google_sheet_id', extractedSheetId);
-      toast.success('Sheet loaded successfully');
+      if (data.tabs && data.tabs.length > 0) {
+        setTabs(data.tabs);
+        setContent(data.content || {});
+        setActiveTab('column1'); // Set first tab as active
+        setIsLoaded(true);
+        localStorage.setItem('google_sheet_id', extractedSheetId);
+        toast.success('Sheet loaded successfully');
+      } else {
+        toast.error('No data found in sheet. Please ensure the sheet has 2 rows with 6 columns.');
+      }
     } catch (error: any) {
       console.error('Error loading sheet:', error);
       toast.error(error.message || 'Failed to load sheet');
@@ -80,27 +76,24 @@ export default function SheetsDashboard() {
     }
   };
 
-  const renderColumnContent = (columnData: string[]) => {
-    if (columnData.length === 0) {
+  const renderTabContent = (columnKey: string) => {
+    const contentValue = content[columnKey] || '';
+    
+    if (!contentValue.trim()) {
       return (
         <div className="flex items-center justify-center h-full text-muted-foreground">
-          No data in this column
+          No content available
         </div>
       );
     }
 
     return (
-      <div className="space-y-2">
-        {columnData.map((value, index) => (
-          <div
-            key={index}
-            className="p-3 bg-card border border-border rounded-lg hover:bg-secondary/50 transition-colors"
-          >
-            <span className="text-sm text-foreground whitespace-pre-wrap break-words">
-              {value || '(empty)'}
-            </span>
-          </div>
-        ))}
+      <div className="p-6">
+        <div className="bg-card border border-border rounded-lg p-6 hover:bg-secondary/50 transition-colors">
+          <span className="text-sm text-foreground whitespace-pre-wrap break-words">
+            {contentValue}
+          </span>
+        </div>
       </div>
     );
   };
@@ -140,60 +133,38 @@ export default function SheetsDashboard() {
 
 
         {/* Tabs with Column Data */}
-        {isLoaded && (
+        {isLoaded && tabs.length > 0 && (
           <div className="bg-card border border-border rounded-lg overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex">
                 {/* Left Side Tabs */}
                 <TabsList className="flex flex-col h-auto w-48 bg-secondary/50 border-r border-border rounded-none rounded-l-lg p-2 space-y-1">
-                  <TabsTrigger
-                    value="column1"
-                    className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                  >
-                    {columns.column1[0] || 'Column 1'}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="column2"
-                    className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                  >
-                    {columns.column2[0] || 'Column 2'}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="column3"
-                    className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                  >
-                    {columns.column3[0] || 'Column 3'}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="column4"
-                    className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                  >
-                    {columns.column4[0] || 'Column 4'}
-                  </TabsTrigger>
+                  {tabs.map((tabTitle, index) => {
+                    const columnKey = `column${index + 1}`;
+                    return (
+                      <TabsTrigger
+                        key={columnKey}
+                        value={columnKey}
+                        className="w-full justify-start data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                      >
+                        {tabTitle}
+                      </TabsTrigger>
+                    );
+                  })}
                 </TabsList>
 
                 {/* Content Area */}
                 <div className="flex-1">
-                  <TabsContent value="column1" className="mt-0 h-full">
-                    <ScrollArea className="h-[calc(100vh-300px)] p-6">
-                      {renderColumnContent(columns.column1)}
-                    </ScrollArea>
-                  </TabsContent>
-                  <TabsContent value="column2" className="mt-0 h-full">
-                    <ScrollArea className="h-[calc(100vh-300px)] p-6">
-                      {renderColumnContent(columns.column2)}
-                    </ScrollArea>
-                  </TabsContent>
-                  <TabsContent value="column3" className="mt-0 h-full">
-                    <ScrollArea className="h-[calc(100vh-300px)] p-6">
-                      {renderColumnContent(columns.column3)}
-                    </ScrollArea>
-                  </TabsContent>
-                  <TabsContent value="column4" className="mt-0 h-full">
-                    <ScrollArea className="h-[calc(100vh-300px)] p-6">
-                      {renderColumnContent(columns.column4)}
-                    </ScrollArea>
-                  </TabsContent>
+                  {tabs.map((_, index) => {
+                    const columnKey = `column${index + 1}`;
+                    return (
+                      <TabsContent key={columnKey} value={columnKey} className="mt-0 h-full">
+                        <ScrollArea className="h-[calc(100vh-300px)]">
+                          {renderTabContent(columnKey)}
+                        </ScrollArea>
+                      </TabsContent>
+                    );
+                  })}
                 </div>
               </div>
             </Tabs>
@@ -213,4 +184,5 @@ export default function SheetsDashboard() {
     </DashboardLayout>
   );
 }
+
 

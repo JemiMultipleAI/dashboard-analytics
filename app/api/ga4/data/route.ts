@@ -11,10 +11,24 @@ async function getAuthenticatedClient(service: 'ga4' | 'gsc') {
     throw new Error('Not authenticated');
   }
 
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 
+                      process.env.GOOGLE_REDIRECT_URI;
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    console.error('❌ Missing OAuth configuration:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      hasRedirectUri: !!redirectUri,
+    });
+    throw new Error('OAuth configuration incomplete');
+  }
+
   const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI
+    clientId,
+    clientSecret,
+    redirectUri
   );
 
   oauth2Client.setCredentials({
@@ -28,6 +42,23 @@ async function getAuthenticatedClient(service: 'ga4' | 'gsc') {
 export async function GET(request: NextRequest) {
   try {
     console.log('🔵 Starting GA4 data fetch...');
+    
+    // Check authentication first
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('google_ga4_access_token')?.value;
+    
+    if (!accessToken) {
+      console.error('❌ No GA4 access token found in cookies');
+      return NextResponse.json(
+        { 
+          error: 'Not authenticated', 
+          details: 'Please connect your Google Analytics account first.',
+          code: 'NOT_AUTHENTICATED'
+        }, 
+        { status: 401 }
+      );
+    }
+    
     const auth = await getAuthenticatedClient('ga4');
     console.log('✅ Authentication successful');
     const analyticsData = google.analyticsdata('v1beta');
@@ -595,14 +626,78 @@ export async function GET(request: NextRequest) {
     console.error('Error details:', {
       message: error.message,
       code: error.code,
-      stack: error.stack?.substring(0, 200),
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      stack: error.stack?.substring(0, 300),
     });
     
-    if (error.message === 'Not authenticated') {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    if (error.message === 'Not authenticated' || error.message === 'OAuth configuration incomplete') {
+      return NextResponse.json(
+        { 
+          error: error.message === 'Not authenticated' ? 'Not authenticated' : 'OAuth configuration incomplete',
+          details: error.message === 'Not authenticated' 
+            ? 'Please connect your Google Analytics account first.'
+            : 'Please check your OAuth configuration in environment variables.',
+          code: error.message === 'Not authenticated' ? 'NOT_AUTHENTICATED' : 'OAUTH_CONFIG_ERROR'
+        }, 
+        { status: 401 }
+      );
     }
+
+    // Handle specific Google API errors
+    if (error.code === 403) {
+      // Check if it's a quota error
+      if (error.message?.includes('quota') || error.message?.includes('Exhausted')) {
+        return NextResponse.json(
+          { 
+            error: 'API Quota Exceeded',
+            details: error.message || 'Exhausted potentially thresholded requests quota. This quota will refresh in under an hour.',
+            code: 'QUOTA_EXCEEDED'
+          },
+          { status: 429 }
+        );
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Access denied',
+          details: 'Please ensure the Google Analytics API is enabled and you have proper permissions.',
+          code: 'ACCESS_DENIED'
+        },
+        { status: 403 }
+      );
+    }
+
+    // Handle rate limiting (429 status)
+    if (error.code === 429 || error.response?.status === 429) {
+      return NextResponse.json(
+        { 
+          error: 'API Quota Exceeded',
+          details: error.message || 'Exhausted potentially thresholded requests quota. This quota will refresh in under an hour.',
+          code: 'QUOTA_EXCEEDED'
+        },
+        { status: 429 }
+      );
+    }
+
+    if (error.code === 404) {
+      return NextResponse.json(
+        { 
+          error: 'Property not found',
+          details: 'Please verify you have a GA4 property set up in Google Analytics.',
+          code: 'PROPERTY_NOT_FOUND'
+        },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Failed to fetch GA4 data', details: error.message },
+      { 
+        error: 'Failed to fetch GA4 data', 
+        details: error.message || 'Unknown error occurred',
+        code: error.code || 'UNKNOWN_ERROR'
+      },
       { status: 500 }
     );
   }

@@ -11,10 +11,24 @@ async function getAuthenticatedClient() {
     throw new Error('Not authenticated');
   }
 
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 
+                      process.env.GOOGLE_REDIRECT_URI;
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    console.error('❌ Missing OAuth configuration:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      hasRedirectUri: !!redirectUri,
+    });
+    throw new Error('OAuth configuration incomplete');
+  }
+
   const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI
+    clientId,
+    clientSecret,
+    redirectUri
   );
 
   oauth2Client.setCredentials({
@@ -28,6 +42,23 @@ async function getAuthenticatedClient() {
 export async function GET(request: NextRequest) {
   try {
     console.log('🔵 Starting GSC data fetch...');
+    
+    // Check authentication first
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('google_gsc_access_token')?.value;
+    
+    if (!accessToken) {
+      console.error('❌ No GSC access token found in cookies');
+      return NextResponse.json(
+        { 
+          error: 'Not authenticated', 
+          details: 'Please connect your Google Search Console account first.',
+          code: 'NOT_AUTHENTICATED'
+        }, 
+        { status: 401 }
+      );
+    }
+    
     const auth = await getAuthenticatedClient();
     console.log('✅ GSC Authentication successful');
     const searchconsole = google.searchconsole('v1');
@@ -211,30 +242,60 @@ export async function GET(request: NextRequest) {
       stack: error.stack?.substring(0, 300),
     });
     
-    if (error.message === 'Not authenticated') {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    if (error.message === 'Not authenticated' || error.message === 'OAuth configuration incomplete') {
+      return NextResponse.json(
+        { 
+          error: error.message === 'Not authenticated' ? 'Not authenticated' : 'OAuth configuration incomplete',
+          details: error.message === 'Not authenticated' 
+            ? 'Please connect your Google Search Console account first.'
+            : 'Please check your OAuth configuration in environment variables.',
+          code: error.message === 'Not authenticated' ? 'NOT_AUTHENTICATED' : 'OAUTH_CONFIG_ERROR'
+        }, 
+        { status: 401 }
+      );
     }
 
     // Handle specific Google API errors
-    if (error.code === 403) {
+    if (error.code === 403 || error.response?.status === 403) {
       return NextResponse.json(
-        { error: 'Access denied. Please ensure the Search Console API is enabled and you have proper permissions.' },
+        { 
+          error: 'Access denied',
+          details: 'Please ensure the Search Console API is enabled in Google Cloud Console and you have proper permissions. Steps: 1) Go to Google Cloud Console → APIs & Services → Library, 2) Search for "Google Search Console API", 3) Click Enable, 4) Wait a few minutes for changes to propagate.',
+          code: 'ACCESS_DENIED'
+        },
         { status: 403 }
       );
     }
 
-    if (error.code === 404) {
+    if (error.code === 404 || error.response?.status === 404) {
       return NextResponse.json(
-        { error: 'Site not found. Please verify the site is added to Google Search Console.' },
+        { 
+          error: 'Site not found',
+          details: 'Please verify the site is added to Google Search Console. Go to search.google.com/search-console and add your property.',
+          code: 'SITE_NOT_FOUND'
+        },
         { status: 404 }
+      );
+    }
+
+    // Handle quota/rate limiting
+    if (error.code === 429 || error.response?.status === 429 || error.message?.includes('quota')) {
+      return NextResponse.json(
+        { 
+          error: 'API Quota Exceeded',
+          details: error.message || 'Exhausted potentially thresholded requests quota. This quota will refresh in under an hour.',
+          code: 'QUOTA_EXCEEDED'
+        },
+        { status: 429 }
       );
     }
 
     return NextResponse.json(
       { 
         error: 'Failed to fetch GSC data', 
-        details: error.message,
-        code: error.code || 'UNKNOWN_ERROR'
+        details: error.message || 'Unknown error occurred. Please check the server logs for more details.',
+        code: error.code || 'UNKNOWN_ERROR',
+        hint: 'Check that: 1) Search Console API is enabled, 2) OAuth credentials are correct, 3) You have at least one property in Search Console'
       },
       { status: 500 }
     );
