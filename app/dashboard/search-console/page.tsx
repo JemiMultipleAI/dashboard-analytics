@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
   GSCOverviewWidget,
@@ -22,7 +22,7 @@ export default function SearchConsoleDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async (forceRefresh: boolean = false) => {
+  const loadData = useCallback(async (forceRefresh: boolean = false) => {
     // Only fetch real data if GSC is connected
     if (!connectedAccounts.gsc) {
       setLoading(false);
@@ -57,11 +57,11 @@ export default function SearchConsoleDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [connectedAccounts.gsc]);
 
   useEffect(() => {
     loadData();
-  }, [connectedAccounts.gsc]);
+  }, [loadData]);
 
   const handleRefresh = () => {
     loadData(true);

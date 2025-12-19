@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
   GA4RealtimeWidget,
@@ -25,7 +25,7 @@ export default function AnalyticsDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async (forceRefresh: boolean = false) => {
+  const loadData = useCallback(async (forceRefresh: boolean = false) => {
     // Only fetch real data if GA4 is connected
     if (!connectedAccounts.ga4) {
       setLoading(false);
@@ -68,11 +68,11 @@ export default function AnalyticsDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [connectedAccounts.ga4]);
 
   useEffect(() => {
     loadData();
-  }, [connectedAccounts.ga4]);
+  }, [loadData]);
 
   const handleRefresh = () => {
     loadData(true);

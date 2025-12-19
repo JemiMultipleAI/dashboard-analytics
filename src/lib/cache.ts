@@ -35,12 +35,13 @@ export function getCachedData<T>(key: string): T | null {
 export function setCachedData<T>(key: string, data: T, ttl: number = DEFAULT_TTL): void {
   if (typeof window === 'undefined') return;
   
+  const entry: CacheEntry<T> = {
+    data,
+    timestamp: Date.now(),
+    ttl,
+  };
+  
   try {
-    const entry: CacheEntry<T> = {
-      data,
-      timestamp: Date.now(),
-      ttl,
-    };
     localStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(entry));
   } catch (error) {
     console.error('Error writing cache:', error);

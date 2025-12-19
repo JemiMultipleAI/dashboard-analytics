@@ -236,72 +236,68 @@ export async function fetchAdsData(startDate?: Date, endDate?: Date, forceRefres
     }
   }
   
-  try {
-    console.log('🔄 Fetching fresh Google Ads data from API...');
-    const url = `/api/ads/data${params.toString() ? `?${params.toString()}` : ''}`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Clear cache on auth error
-        clearCache(cacheKey);
-        throw new Error('Not authenticated. Please connect your Google Ads account.');
-      }
-      
-      // Try to parse JSON error response
-      let errorData: any = {};
-      let errorText = '';
-      
-      try {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          errorData = await response.json();
-        } else {
-          errorText = await response.text();
-        }
-      } catch (parseError) {
-        console.error('Failed to parse error response:', parseError);
-        errorText = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`;
-      }
-      
-      // Build comprehensive error message
-      let errorMessage = errorData.details || errorData.error || errorText;
-      
-      // If we still don't have a message, create one from status
-      if (!errorMessage || errorMessage === '{}' || (typeof errorMessage === 'object' && Object.keys(errorMessage).length === 0)) {
-        if (response.status === 403) {
-          errorMessage = 'Access denied. Please ensure the Google Ads API is enabled and you have proper permissions.';
-        } else if (response.status === 404) {
-          errorMessage = 'Customer ID not found. Please verify your Google Ads Customer ID.';
-        } else if (response.status === 429) {
-          errorMessage = 'API quota exceeded. Please wait a few minutes and try again.';
-        } else {
-          errorMessage = `Failed to fetch Google Ads data: HTTP ${response.status} ${response.statusText || 'Unknown error'}`;
-        }
-      }
-      
-      console.error('Google Ads API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData,
-        errorText: errorText || 'No error text',
-        message: errorMessage,
-        url: response.url,
-      });
-      
-      throw new Error(errorMessage);
+  console.log('🔄 Fetching fresh Google Ads data from API...');
+  const url = `/api/ads/data${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    if (response.status === 401) {
+      // Clear cache on auth error
+      clearCache(cacheKey);
+      throw new Error('Not authenticated. Please connect your Google Ads account.');
     }
     
-    const data = await response.json();
+    // Try to parse JSON error response
+    let errorData: any = {};
+    let errorText = '';
     
-    // Cache the successful response
-    setCachedData(cacheKey, data, CACHE_TTL.ADS);
-    console.log('✅ Google Ads data cached for', CACHE_TTL.ADS / 1000 / 60, 'minutes');
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        errorData = await response.json();
+      } else {
+        errorText = await response.text();
+      }
+    } catch (parseError) {
+      console.error('Failed to parse error response:', parseError);
+      errorText = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`;
+    }
     
-    return data;
-  } catch (error: any) {
-    throw error;
+    // Build comprehensive error message
+    let errorMessage = errorData.details || errorData.error || errorText;
+    
+    // If we still don't have a message, create one from status
+    if (!errorMessage || errorMessage === '{}' || (typeof errorMessage === 'object' && Object.keys(errorMessage).length === 0)) {
+      if (response.status === 403) {
+        errorMessage = 'Access denied. Please ensure the Google Ads API is enabled and you have proper permissions.';
+      } else if (response.status === 404) {
+        errorMessage = 'Customer ID not found. Please verify your Google Ads Customer ID.';
+      } else if (response.status === 429) {
+        errorMessage = 'API quota exceeded. Please wait a few minutes and try again.';
+      } else {
+        errorMessage = `Failed to fetch Google Ads data: HTTP ${response.status} ${response.statusText || 'Unknown error'}`;
+      }
+    }
+    
+    console.error('Google Ads API Error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorData,
+      errorText: errorText || 'No error text',
+      message: errorMessage,
+      url: response.url,
+    });
+    
+    throw new Error(errorMessage);
   }
+  
+  const data = await response.json();
+  
+  // Cache the successful response
+  setCachedData(cacheKey, data, CACHE_TTL.ADS);
+  console.log('✅ Google Ads data cached for', CACHE_TTL.ADS / 1000 / 60, 'minutes');
+  
+  return data;
 }
 
 export async function fetchSheetsData(sheetId: string, range?: string) {
