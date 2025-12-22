@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Layers } from 'lucide-react';
 import { toast } from 'sonner';
+import { Footer } from '@/components/layout/Footer';
 
 // Hardcoded test user credentials
 const TEST_USER = {
@@ -40,7 +41,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 gradient-primary items-center justify-center p-12">
         <div className="max-w-md text-center">
@@ -146,6 +147,7 @@ export default function Login() {
           </form>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
