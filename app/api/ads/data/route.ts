@@ -33,10 +33,18 @@ export async function GET(request: NextRequest) {
     }
 
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get('google_ads_refresh_token')?.value;
+    let refreshToken = cookieStore.get('google_ads_refresh_token')?.value;
+
+    // Fallback: Check environment variables for pre-authorized refresh tokens
+    if (!refreshToken) {
+      refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
+    }
 
     if (!refreshToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return NextResponse.json({ 
+        error: 'Not authenticated',
+        details: 'Please connect your Google Ads account or set GOOGLE_ADS_REFRESH_TOKEN in environment variables.'
+      }, { status: 401 });
     }
 
     console.log('✅ Google Ads Authentication successful');

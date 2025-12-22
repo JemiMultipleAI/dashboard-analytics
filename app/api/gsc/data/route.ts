@@ -4,8 +4,51 @@ import { cookies } from 'next/headers';
 
 async function getAuthenticatedClient() {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get('google_gsc_access_token')?.value;
-  const refreshToken = cookieStore.get('google_gsc_refresh_token')?.value;
+  let accessToken = cookieStore.get('google_gsc_access_token')?.value;
+  let refreshToken = cookieStore.get('google_gsc_refresh_token')?.value;
+
+  // Fallback: Check environment variables for pre-authorized refresh tokens
+  if (!refreshToken) {
+    refreshToken = process.env.GOOGLE_GSC_REFRESH_TOKEN;
+  }
+
+  // If we have a refresh token but no access token, try to refresh
+  if (refreshToken && !accessToken) {
+    try {
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+      const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 
+                          process.env.GOOGLE_REDIRECT_URI;
+
+      if (clientId && clientSecret && redirectUri) {
+        const oauth2Client = new google.auth.OAuth2(
+          clientId,
+          clientSecret,
+          redirectUri
+        );
+
+        oauth2Client.setCredentials({
+          refresh_token: refreshToken,
+        });
+
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        accessToken = credentials.access_token || undefined;
+        
+        // Store the new access token in cookie
+        if (accessToken) {
+          cookieStore.set('google_gsc_access_token', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7,
+            path: '/',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh access token for GSC:', error);
+    }
+  }
 
   if (!accessToken) {
     throw new Error('Not authenticated');
