@@ -316,6 +316,26 @@ export async function fetchSheetsData(sheetId: string, range?: string) {
   return response.json();
 }
 
+export async function fetchSeoChatReply(question: string): Promise<string> {
+  const response = await fetch('/api/seo-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = data?.error || 'Failed to fetch SEO chat response';
+    throw new Error(message);
+  }
+
+  const output =
+    typeof data?.output === 'string' ? data.output : JSON.stringify(data);
+
+  return output;
+}
+
 export async function checkConnectionStatus(service: 'ga4' | 'gsc' | 'ads'): Promise<boolean> {
   try {
     if (service === 'ga4') {
