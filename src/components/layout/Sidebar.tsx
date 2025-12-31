@@ -34,7 +34,7 @@ const navSections = [
   {
     label: 'SEO Agents',
     items: [
-      { path: '/dashboard/sheets', label: 'Smart SEO', icon: FileSpreadsheet },
+      { path: '/dashboard/agents', label: 'Smart SEO', icon: FileSpreadsheet },
       { path: '/dashboard/chat', label: 'Chat', icon: MessageCircle },
       { path: '/dashboard/seo-chat', label: 'SEO Chat', icon: MessageCircle },
     ],
