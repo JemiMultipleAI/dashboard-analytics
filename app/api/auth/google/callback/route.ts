@@ -58,15 +58,7 @@ export async function GET(request: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 365, // 1 year
-        path: '/',
       });
-      
-      // Log refresh token for easy setup (only in development)
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`\n🔑 Refresh Token for ${state.toUpperCase()}:`);
-        console.log(`GOOGLE_${state.toUpperCase()}_REFRESH_TOKEN=${tokens.refresh_token}\n`);
-        console.log('💡 Add this to your .env.local file to enable pre-authentication\n');
-      }
     }
 
     return NextResponse.redirect(new URL(`/dashboard?connected=${state}`, baseUrl));

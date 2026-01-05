@@ -33,18 +33,10 @@ export async function GET(request: NextRequest) {
     }
 
     const cookieStore = await cookies();
-    let refreshToken = cookieStore.get('google_ads_refresh_token')?.value;
-
-    // Fallback: Check environment variables for pre-authorized refresh tokens
-    if (!refreshToken) {
-      refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
-    }
+    const refreshToken = cookieStore.get('google_ads_refresh_token')?.value;
 
     if (!refreshToken) {
-      return NextResponse.json({ 
-        error: 'Not authenticated',
-        details: 'Please connect your Google Ads account or set GOOGLE_ADS_REFRESH_TOKEN in environment variables.'
-      }, { status: 401 });
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     console.log('✅ Google Ads Authentication successful');
@@ -56,22 +48,49 @@ export async function GET(request: NextRequest) {
       developer_token: developerToken,
     });
 
-    // Get customer ID from environment variable
-    const envCustomerId = process.env.GOOGLE_ADS_CUSTOMER_ID;
+    // Get customer ID - try auto-detection first, then fall back to env variable
+    console.log('📋 Fetching accessible customers...');
+    let customerId: string | undefined;
     
-    if (!envCustomerId) {
+    // First, try to get customer ID from environment variable
+    const envCustomerId = process.env.GOOGLE_ADS_CUSTOMER_ID;
+    if (envCustomerId) {
+      // Remove dashes if present (format: 270-641-8609 -> 2706418609)
+      customerId = envCustomerId.replace(/-/g, '');
+      console.log('✅ Using customer ID from environment:', customerId);
+    } else {
+      // Try to auto-detect customer ID
+      try {
+        // Use the CustomerService to list accessible customers
+        const customerService = client.getService('CustomerService');
+        const response = await customerService.listAccessibleCustomers({
+          refresh_token: refreshToken,
+        });
+        
+        if (!response.resourceNames || response.resourceNames.length === 0) {
+          throw new Error('No accessible customers found');
+        }
+        
+        // Extract customer ID from resource name (format: customers/1234567890)
+        const resourceName = response.resourceNames[0];
+        customerId = resourceName.replace('customers/', '');
+        console.log('✅ Auto-detected customer ID:', customerId);
+      } catch (error: any) {
+        console.error('Error auto-detecting customer ID:', error);
+        console.log('⚠️ Auto-detection failed, but continuing with manual customer ID if available');
+      }
+    }
+    
+    // If we still don't have a customer ID, return an error
+    if (!customerId) {
       return NextResponse.json(
         { 
-          error: 'Customer ID not configured. Please add GOOGLE_ADS_CUSTOMER_ID to your .env.local file.',
-          details: 'Customer ID is required to access Google Ads data. You can find it in your Google Ads account settings (format: 270-641-8609 or 2706418609).',
+          error: 'Unable to detect customer ID. Please add GOOGLE_ADS_CUSTOMER_ID to your .env.local file.',
+          details: 'Customer ID is required to access Google Ads data. You can find it in your Google Ads account settings.',
         },
         { status: 400 }
       );
     }
-    
-    // Remove dashes if present (format: 270-641-8609 -> 2706418609)
-    const customerId = envCustomerId.replace(/-/g, '');
-    console.log('✅ Using customer ID from environment:', customerId);
 
     // Create customer instance
     const customer = client.Customer({
@@ -369,6 +388,7 @@ export async function GET(request: NextRequest) {
         avgCTR: Math.round(avgCTR * 100) / 100,
         roas: Math.round(roas * 10) / 10,
         spendTrend: Math.round(costTrend * 10) / 10,
+        conversionsTrend: Math.round(conversionsTrend * 10) / 10,
       },
       campaigns: campaigns.slice(0, 10),
       adGroups: adGroups.slice(0, 10),

@@ -220,7 +220,7 @@ export default function AgentsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Initiate Full SEO Workflow</CardTitle>
             <CardDescription>
-              Trigger the n8n workflow for a specific website URL.
+              Evaluate website's SEO magic.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">

@@ -46,42 +46,6 @@ function DashboardContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]); // Only depend on searchParams to avoid infinite loops
 
-  // Auto-connect using pre-authorized refresh tokens from environment
-  useEffect(() => {
-    const autoConnectPreAuth = async () => {
-      // Only try auto-connect if no accounts are connected
-      const connectedCount = Object.values(connectedAccounts).filter(Boolean).length;
-      if (connectedCount > 0) return;
-
-      const services: Array<'ga4' | 'gsc' | 'ads'> = ['ga4', 'gsc', 'ads'];
-      
-      for (const service of services) {
-        try {
-          const response = await fetch('/api/auth/google/pre-auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ service }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-              connectAccount(service);
-              console.log(`✅ Auto-connected ${service.toUpperCase()} using pre-authorized token`);
-            }
-          }
-        } catch (error) {
-          // Silently fail - this is expected if refresh tokens are not set
-          console.debug(`Pre-auth not available for ${service}`);
-        }
-      }
-    };
-
-    // Only run auto-connect once on mount
-    autoConnectPreAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - only run once on mount
-
   // Fetch real stats when accounts are connected
   useEffect(() => {
     const loadStats = async () => {
