@@ -85,11 +85,21 @@ const sections: Section[] = [
   },
 ];
 
+const sectionAccent: Record<SmartSeoTableKey, string> = {
+  keyword_strategy_agent_outputs: "bg-blue-500/10 border-blue-400/40",
+  seo_keyword_agent_outputs: "bg-indigo-500/10 border-indigo-400/40",
+  content_writer_agent_outputs: "bg-emerald-500/10 border-emerald-400/40",
+  final_website_content_agent_outputs: "bg-teal-500/10 border-teal-400/40",
+  final_seo_recommendations_agent_outputs: "bg-orange-500/10 border-orange-400/40",
+  backlink_blog_agent_outputs: "bg-pink-500/10 border-pink-400/40",
+  off_page_seo_agent_outputs: "bg-amber-500/10 border-amber-400/40",
+  on_page_seo_agent_outputs: "bg-rose-500/10 border-rose-400/40",
+  seo_agent_outputs: "bg-slate-500/10 border-slate-400/40",
+};
+
 function parseAgentSlug(slug: string | string[] | undefined) {
   if (!slug || Array.isArray(slug)) return null;
-  const [agent, website] = slug.split("__").map(decodeURIComponent);
-  if (!agent || !website) return null;
-  return { agent_name: agent, website };
+  return { agent_name: decodeURIComponent(slug) };
 }
 
 function formatDate(value?: string | null) {
@@ -102,17 +112,19 @@ function formatDate(value?: string | null) {
 }
 
 const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+  <p className="text-[12px] font-semibold text-foreground uppercase tracking-wide">
     {children}
   </p>
 );
 
 const TextBlock = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-sm leading-relaxed whitespace-pre-wrap">{children}</p>
+  <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+    {children}
+  </p>
 );
 
 const Tag = ({ children }: { children: React.ReactNode }) => (
-  <Badge variant="outline" className="text-[11px] font-semibold">
+  <Badge variant="secondary" className="text-[11px] font-semibold bg-primary/15 text-primary border-primary/30">
     {children}
   </Badge>
 );
@@ -134,12 +146,32 @@ function formatAgentName(name: string) {
   return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+const priorityClass = (priority?: string) => {
+  if (!priority) return "bg-secondary text-foreground";
+  const p = priority.toLowerCase();
+  if (p.includes("high")) return "bg-red-500/15 text-red-700 border-red-200";
+  if (p.includes("medium"))
+    return "bg-amber-500/15 text-amber-700 border-amber-200";
+  if (p.includes("low"))
+    return "bg-emerald-500/15 text-emerald-700 border-emerald-200";
+  return "bg-secondary text-foreground";
+};
+
+const PriorityTag = ({ priority }: { priority?: string }) => (
+  <Badge
+    variant="outline"
+    className={`text-[11px] font-semibold ${priorityClass(priority)}`}
+  >
+    {priority || "N/A"}
+  </Badge>
+);
+
 function KeyValueTable({ data }: { data: Record<string, any> }) {
   const entries = Object.entries(data);
   if (entries.length === 0) return <TextBlock>Not provided.</TextBlock>;
 
   return (
-    <div className="divide-y divide-border/70 rounded-lg border border-border/60 bg-secondary/20">
+    <div className="divide-y divide-border/70 rounded-lg border border-border/60 bg-secondary/30">
       {entries.map(([k, v]) => {
         const label = k.replace(/_/g, " ");
         const isPrimitive =
@@ -158,7 +190,7 @@ function KeyValueTable({ data }: { data: Record<string, any> }) {
         return (
           <div
             key={k}
-            className="px-3 py-2 grid grid-cols-3 gap-2 items-start text-sm"
+            className="px-3 py-2 grid grid-cols-3 gap-2 items-start text-sm even:bg-secondary/50"
           >
             <p className="font-semibold text-foreground col-span-1">{label}</p>
             <div className="col-span-2 space-y-1">
@@ -181,7 +213,7 @@ function KeyValueTable({ data }: { data: Record<string, any> }) {
 
 function ObjectCard({ obj }: { obj: Record<string, unknown> }) {
   return (
-    <div className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1 text-sm">
+    <div className="rounded-lg border border-border/50 bg-secondary/30 p-3 space-y-1 text-sm">
       {Object.entries(obj).map(([k, v]) => (
         <div key={k} className="space-y-0.5">
           <p className="font-semibold">{k.replace(/_/g, " ")}</p>
@@ -208,7 +240,7 @@ function List({ items }: { items: any[] }) {
     return (
       <ul className="list-disc pl-4 space-y-1 text-sm">
         {items.map((item, idx) => (
-          <li key={idx} className="leading-relaxed">
+          <li key={idx} className="leading-relaxed text-foreground">
             {String(item)}
           </li>
         ))}
@@ -367,11 +399,11 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="border-border/70">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">{title}</CardTitle>
+    <Card className="border-border/70 bg-secondary/40 rounded-xl shadow-lg">
+      <CardHeader className="pb-2 border-b border-border/70">
+        <CardTitle className="text-lg text-foreground">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">{children}</CardContent>
+      <CardContent className="space-y-4 pt-4">{children}</CardContent>
     </Card>
   );
 }
@@ -1597,22 +1629,56 @@ export default function AgentDetailPage() {
     enabled: Boolean(parsed),
   });
 
-  const recordsBySection = useMemo(() => {
-    if (!data || !parsed) return {} as SmartSeoData;
-    return Object.entries(data).reduce((acc, [key, records]) => {
-      acc[key as SmartSeoTableKey] = records
-        .filter(
-          (record) =>
-            record.agent_name === parsed.agent_name &&
-            record.website === parsed.website
-        )
-        .sort((a, b) => {
+  const agentRecords = useMemo(() => {
+    if (!data || !parsed) return [];
+    return Object.values(data).flatMap((records) =>
+      records.filter((r) => r.agent_name === parsed.agent_name)
+    );
+  }, [data, parsed]);
+
+  const websites = useMemo(() => {
+    const set = new Set<string>();
+    agentRecords.forEach((r) => set.add(r.website));
+    return Array.from(set);
+  }, [agentRecords]);
+
+  const recordsByWebsiteAndSection = useMemo(() => {
+    const result: Record<
+      string,
+      Record<SmartSeoTableKey, SmartSeoRecord[]>
+    > = {};
+    if (!data || !parsed) return result;
+
+    Object.entries(data).forEach(([key, records]) => {
+      records
+        .filter((r) => r.agent_name === parsed.agent_name)
+        .forEach((r) => {
+          const websiteKey = r.website;
+          if (!result[websiteKey]) {
+            result[websiteKey] = {} as Record<
+              SmartSeoTableKey,
+              SmartSeoRecord[]
+            >;
+          }
+          if (!result[websiteKey][key as SmartSeoTableKey]) {
+            result[websiteKey][key as SmartSeoTableKey] = [];
+          }
+          result[websiteKey][key as SmartSeoTableKey].push(r);
+        });
+    });
+
+    // sort by created_at desc per bucket
+    Object.values(result).forEach((sectionMap) => {
+      Object.entries(sectionMap).forEach(([k, recs]) => {
+        sectionMap[k as SmartSeoTableKey] = recs.sort((a, b) => {
           const da = a.created_at ? new Date(a.created_at).getTime() : 0;
           const db = b.created_at ? new Date(b.created_at).getTime() : 0;
           return db - da;
         });
-      return acc;
-    }, {} as SmartSeoData);
+      });
+    });
+
+    return result;
   }, [data, parsed]);
 
   if (!parsed) {
@@ -1632,16 +1698,7 @@ export default function AgentDetailPage() {
     );
   }
 
-  const totalRecords = data
-    ? Object.values(recordsBySection).reduce(
-        (sum, records) => sum + records.length,
-        0
-      )
-    : 0;
-
-  const sectionsWithData = sections.filter(
-    (section) => (recordsBySection?.[section.key] || []).length > 0
-  );
+  const totalRecords = agentRecords.length;
 
   return (
     <DashboardLayout title="Smart SEO">
@@ -1649,18 +1706,20 @@ export default function AgentDetailPage() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <CardTitle className="text-xl">
-                  {formatAgentName(parsed.agent_name)}
-                </CardTitle>
-                <CardDescription className="break-all">
-                  {parsed.website}
-                </CardDescription>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Agent
+                  </p>
+                  <CardTitle className="text-2xl text-foreground">
+                    {formatAgentName(parsed.agent_name)}
+                  </CardTitle>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary">
                     {formatAgentName(parsed.agent_name)}
                   </Badge>
-                  <Badge variant="outline">{parsed.website}</Badge>
+                  <Badge variant="outline">Websites: {websites.length}</Badge>
                   <Badge variant="outline">Records: {totalRecords}</Badge>
                 </div>
               </div>
@@ -1674,62 +1733,101 @@ export default function AgentDetailPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-secondary/30 border border-border/60 rounded-lg p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Agent</p>
-              <p className="font-semibold">{parsed.agent_name}</p>
-            </div>
-            <div className="bg-secondary/30 border border-border/60 rounded-lg p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Website</p>
-              <div className="flex items-center gap-2">
-                <p className="font-semibold break-all">{parsed.website}</p>
-                <a
-                  href={parsed.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
-            <div className="bg-secondary/30 border border-border/60 rounded-lg p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Total Records</p>
-              <p className="font-semibold">{totalRecords}</p>
-            </div>
-          </CardContent>
         </Card>
 
         <ScrollArea className="h-[calc(100vh-280px)] pr-2">
-          <div className="space-y-6">
-            {sectionsWithData.length === 0 && !isLoading && (
+          <div className="space-y-4">
+            {websites.length === 0 && !isLoading && (
               <Card className="border-border/70">
                 <CardContent className="pt-6">
-                  <TextBlock>No data found for this agent/website.</TextBlock>
+                  <TextBlock>No data found for this agent.</TextBlock>
                 </CardContent>
               </Card>
             )}
 
-            {sectionsWithData.map((section) => (
-              <div key={section.key} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-lg font-semibold">{section.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {section.description}
-                    </p>
-                  </div>
-                  <Badge variant="outline">
-                    {(recordsBySection?.[section.key] || []).length} entries
-                  </Badge>
-                </div>
-                <SectionRenderer
-                  section={section}
-                  records={recordsBySection?.[section.key] || []}
-                  isLoading={isLoading}
-                />
-              </div>
-            ))}
+            <Accordion
+              type="single"
+              collapsible
+              defaultValue={websites[0]}
+              className="space-y-3"
+            >
+              {websites.map((website) => {
+                const sectionsWithData = sections.filter(
+                  (section) =>
+                    (recordsByWebsiteAndSection?.[website]?.[section.key] || [])
+                      .length > 0
+                );
+                return (
+                  <AccordionItem
+                    key={website}
+                    value={website}
+                    className="border border-border/60 rounded-lg px-3"
+                  >
+                    <AccordionTrigger className="text-left">
+                      <div className="flex flex-col items-start gap-1">
+                        <p className="text-sm font-semibold break-all">
+                          {website}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {sectionsWithData.length} sections •{" "}
+                          {(recordsByWebsiteAndSection?.[website] &&
+                            Object.values(
+                              recordsByWebsiteAndSection[website]
+                            ).reduce((sum, recs) => sum + recs.length, 0)) ||
+                            0}{" "}
+                          entries
+                        </p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-3 pb-4">
+                      <div className="space-y-4">
+                        {sectionsWithData.length === 0 && (
+                          <TextBlock>No data for this website.</TextBlock>
+                        )}
+                        {sectionsWithData.map((section) => (
+                          <div key={section.key} className="space-y-2">
+                            <div
+                              className={`flex items-center justify-between border-l-4 pl-3 rounded-lg p-2 ${
+                                sectionAccent[section.key] ||
+                                "border-primary/70"
+                              }`}
+                            >
+                              <div>
+                                <p className="text-lg font-semibold text-foreground">
+                                  {section.title}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {section.description}
+                                </p>
+                              </div>
+                              <Badge variant="secondary">
+                                {
+                                  (
+                                    recordsByWebsiteAndSection?.[website]?.[
+                                      section.key
+                                    ] || []
+                                  ).length
+                                }{" "}
+                                entries
+                              </Badge>
+                            </div>
+                            <SectionRenderer
+                              section={section}
+                              records={
+                                recordsByWebsiteAndSection?.[website]?.[
+                                  section.key
+                                ] || []
+                              }
+                              isLoading={isLoading}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
           </div>
         </ScrollArea>
       </div>

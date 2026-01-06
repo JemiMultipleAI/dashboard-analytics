@@ -27,9 +27,9 @@ import { toast } from "sonner";
 
 type AgentSummary = {
   agent_name: string;
-  website: string;
   totalRecords: number;
   tables: string[];
+  websites: string[];
 };
 
 const agentLabelMap: Record<string, string> = {
@@ -51,8 +51,17 @@ function formatAgentName(name: string) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function slugifyAgent(agent_name: string, website: string) {
-  return `${encodeURIComponent(agent_name)}__${encodeURIComponent(website)}`;
+const badgeTone = [
+  "bg-sky-500/15 text-sky-700 border-sky-200",
+  "bg-emerald-500/15 text-emerald-700 border-emerald-200",
+  "bg-amber-500/15 text-amber-700 border-amber-200",
+  "bg-purple-500/15 text-purple-700 border-purple-200",
+  "bg-pink-500/15 text-pink-700 border-pink-200",
+  "bg-blue-500/15 text-blue-700 border-blue-200",
+];
+
+function slugifyAgent(agent_name: string) {
+  return encodeURIComponent(agent_name);
 }
 
 function buildAgents(data?: SmartSeoData): AgentSummary[] {
@@ -61,18 +70,21 @@ function buildAgents(data?: SmartSeoData): AgentSummary[] {
 
   Object.entries(data).forEach(([table, records]) => {
     records.forEach((record: SmartSeoRecord) => {
-      const key = `${record.agent_name}::${record.website}`;
+      const key = record.agent_name;
       if (!map.has(key)) {
         map.set(key, {
           agent_name: record.agent_name,
-          website: record.website,
           totalRecords: 0,
           tables: [],
+          websites: [],
         });
       }
       const current = map.get(key)!;
       current.totalRecords += 1;
       if (!current.tables.includes(table)) current.tables.push(table);
+      if (!current.websites.includes(record.website)) {
+        current.websites.push(record.website);
+      }
     });
   });
 
@@ -122,7 +134,7 @@ export default function AgentsPage() {
     return list.filter(
       (agent) =>
         (!q || agent.agent_name.toLowerCase().includes(q)) &&
-        (!w || agent.website.toLowerCase().includes(w))
+        (!w || agent.websites.some((site) => site.toLowerCase().includes(w)))
     );
   }, [data, search, websiteFilter]);
 
@@ -133,7 +145,7 @@ export default function AgentsPage() {
       return;
     }
     if (!targetUrl) {
-      toast.error("Missing NEXT_PUBLIC_N8N_FULL_SEO_URL configuration.");
+      toast.error("Missing NEXT_PUBLIC_FULL_SEO_URL configuration.");
       return;
     }
     try {
@@ -171,8 +183,8 @@ export default function AgentsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-xl">Agents Directory</CardTitle>
             <CardDescription>
-              Browse all SEO agent outputs grouped by agent and website. Click a
-              card to view the fully structured report.
+              Browse all SEO agent outputs grouped by agent. Click a card to
+              view structured reports per website.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -218,9 +230,9 @@ export default function AgentsPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Initiate Full SEO Workflow</CardTitle>
+            <CardTitle className="text-lg">Initiate Full SEO Evaluation</CardTitle>
             <CardDescription>
-              Evaluate website's SEO magic.
+              Evaluate a website’s SEO
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -240,12 +252,12 @@ export default function AgentsPage() {
                 {workflowLoading ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Initiating...
+                    SEO in Progress...
                   </>
                 ) : (
                   <>
                     <ArrowRight className="mr-2 h-4 w-4" />
-                    Initiate Workflow
+                    Start SEO
                   </>
                 )}
               </Button>
@@ -265,39 +277,38 @@ export default function AgentsPage() {
           <WidgetGrid>
             {agents.map((agent) => (
               <DashboardCard
-                key={`${agent.agent_name}-${agent.website}`}
-                className="flex flex-col gap-3"
+                key={`${agent.agent_name}-${agent.websites.join(",")}`}
+                className="flex flex-col gap-3 border border-border/70 bg-gradient-to-br from-secondary/60 via-secondary/40 to-secondary/20"
               >
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-foreground">
                     {formatAgentName(agent.agent_name)}
                   </p>
-                  <p className="text-xs text-muted-foreground break-all">
-                    {agent.website}
-                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="bg-primary/15 text-primary border-primary/30">
                     {agent.totalRecords} records
                   </Badge>
-                  <Badge variant="outline">{agent.tables.length} tables</Badge>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 border-emerald-200">
+                    {agent.tables.length} tables
+                  </Badge>
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-200">
+                    {agent.websites.length} websites
+                  </Badge>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {agent.tables.map((table) => (
                     <Badge
                       key={table}
                       variant="outline"
-                      className="text-[11px]"
+                      className="text-[11px] border-border/60 bg-secondary/60"
                     >
                       {table.replace(/_/g, " ")}
                     </Badge>
                   ))}
                 </div>
                 <Link
-                  href={`/dashboard/agents/${slugifyAgent(
-                    agent.agent_name,
-                    agent.website
-                  )}`}
+                  href={`/dashboard/agents/${slugifyAgent(agent.agent_name)}`}
                   className="mt-auto"
                 >
                   <Button className="w-full justify-between">
