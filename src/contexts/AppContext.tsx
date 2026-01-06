@@ -32,8 +32,15 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Load connected accounts from localStorage on mount
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Load authentication state from localStorage on mount
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('isAuthenticated');
+      return saved === 'true';
+    }
+    return false;
+  });
+
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccounts>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('connectedAccounts');
@@ -67,6 +74,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return [];
   });
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Persist authentication state to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isAuthenticated', String(isAuthenticated));
+      // Auto-connect all accounts when user logs in
+      if (isAuthenticated) {
+        setConnectedAccounts({ ga4: true, gsc: true, ads: true });
+      }
+    }
+  }, [isAuthenticated]);
 
   // Persist connected accounts to localStorage whenever they change
   useEffect(() => {

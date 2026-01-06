@@ -4,10 +4,14 @@ import { cookies } from 'next/headers';
 
 async function getAuthenticatedClient(service: 'ga4' | 'gsc') {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get(`google_${service}_access_token`)?.value;
-  const refreshToken = cookieStore.get(`google_${service}_refresh_token`)?.value;
+  let accessToken = cookieStore.get(`google_${service}_access_token`)?.value;
+  
+  // Use refresh token from environment variable (primary) or fallback to cookies
+  const envTokenName = service === 'ga4' ? 'GOOGLE_GA4_REFRESH_TOKEN' : 'GOOGLE_GSC_REFRESH_TOKEN';
+  const refreshToken = process.env[envTokenName] ||
+                      cookieStore.get(`google_${service}_refresh_token`)?.value;
 
-  if (!accessToken) {
+  if (!refreshToken) {
     throw new Error('Not authenticated');
   }
 
@@ -32,9 +36,29 @@ async function getAuthenticatedClient(service: 'ga4' | 'gsc') {
   );
 
   oauth2Client.setCredentials({
-    access_token: accessToken,
+    access_token: accessToken || undefined,
     refresh_token: refreshToken,
   });
+
+  // If we don't have an access token, refresh it using the refresh token
+  if (!accessToken) {
+    try {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      accessToken = credentials.access_token || undefined;
+      // Store the new access token in cookies for reuse
+      if (credentials.access_token) {
+        cookieStore.set(`google_${service}_access_token`, credentials.access_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+      }
+    } catch (error) {
+      console.error('Failed to refresh access token:', error);
+      throw new Error('Not authenticated');
+    }
+  }
 
   return oauth2Client;
 }
@@ -43,12 +67,13 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔵 Starting GA4 data fetch...');
     
-    // Check authentication first
+    // Check if refresh token exists (either in env or cookies)
     const cookieStore = await cookies();
-    const accessToken = cookieStore.get('google_ga4_access_token')?.value;
+    const envRefreshToken = process.env.GOOGLE_GA4_REFRESH_TOKEN;
+    const cookieRefreshToken = cookieStore.get('google_ga4_refresh_token')?.value;
     
-    if (!accessToken) {
-      console.error('❌ No GA4 access token found in cookies');
+    if (!envRefreshToken && !cookieRefreshToken) {
+      console.error('❌ No GA4 refresh token found');
       return NextResponse.json(
         { 
           error: 'Not authenticated', 

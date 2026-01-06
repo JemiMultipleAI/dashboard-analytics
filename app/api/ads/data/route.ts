@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
     }
 
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get('google_ads_refresh_token')?.value;
+    // Use refresh token from environment variable (primary) or fallback to cookies
+    const refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN ||
+                        cookieStore.get('google_ads_refresh_token')?.value;
 
     if (!refreshToken) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
