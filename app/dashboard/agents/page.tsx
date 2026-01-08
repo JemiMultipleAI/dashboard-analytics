@@ -22,7 +22,7 @@ import {
   SmartSeoData,
   SmartSeoRecord,
 } from "@/lib/smartSeo";
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowRight, Filter, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
 type AgentSummary = {
@@ -111,7 +111,7 @@ function AgentSkeletons() {
 export default function AgentsPage() {
   const [search, setSearch] = useState("");
   const [websiteFilter, setWebsiteFilter] = useState("");
-  const [workflowUrl, setWorkflowUrl] = useState("https://multipleai.com.au/");
+  const [workflowUrl, setWorkflowUrl] = useState("");
   const [workflowLoading, setWorkflowLoading] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useQuery<SmartSeoData>({
@@ -240,7 +240,7 @@ export default function AgentsPage() {
               <Input
                 placeholder="https://example.com"
                 value={workflowUrl}
-                disabled
+                onChange={(e) => setWorkflowUrl(e.target.value)}
               />
             </div>
             <div className="flex items-center">
