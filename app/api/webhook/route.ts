@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     
     if (!n8nWebhookUrl) {
       return NextResponse.json(
-        { success: false, error: 'Webhook URL is not configured. Please set N8N_WEBHOOK_URL in your environment variables.' },
+        { success: false, error: 'Webhook URL is not configured. Please set WEBHOOK_URL in your environment variables.' },
         { status: 500 }
       );
     }
