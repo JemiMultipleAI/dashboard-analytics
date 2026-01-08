@@ -300,22 +300,6 @@ export async function fetchAdsData(startDate?: Date, endDate?: Date, forceRefres
   return data;
 }
 
-export async function fetchSheetsData(sheetId: string, range?: string) {
-  const params = new URLSearchParams();
-  params.append('sheetId', sheetId);
-  if (range) {
-    params.append('range', range);
-  }
-  
-  const response = await fetch(`/api/sheets/data?${params.toString()}`);
-  console.log("response", response);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `Failed to fetch Google Sheets data: ${response.status}`);
-  }
-  return response.json();
-}
-
 export async function fetchSeoChatReply(question: string): Promise<string> {
   const response = await fetch('/api/seo-chat', {
     method: 'POST',

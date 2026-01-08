@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "SEO Chat API URL not configured. Please set N8N_SEO_CHAT_API_URL.",
+            "SEO Chat API URL not configured. Please set up.",
         },
         { status: 500 }
       );

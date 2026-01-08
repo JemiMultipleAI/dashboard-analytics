@@ -22,14 +22,14 @@ import {
   SmartSeoData,
   SmartSeoRecord,
 } from "@/lib/smartSeo";
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowRight, Filter, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
 type AgentSummary = {
   agent_name: string;
-  website: string;
   totalRecords: number;
   tables: string[];
+  websites: string[];
 };
 
 const agentLabelMap: Record<string, string> = {
@@ -51,8 +51,17 @@ function formatAgentName(name: string) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function slugifyAgent(agent_name: string, website: string) {
-  return `${encodeURIComponent(agent_name)}__${encodeURIComponent(website)}`;
+const badgeTone = [
+  "bg-sky-500/15 text-sky-700 border-sky-200",
+  "bg-emerald-500/15 text-emerald-700 border-emerald-200",
+  "bg-amber-500/15 text-amber-700 border-amber-200",
+  "bg-purple-500/15 text-purple-700 border-purple-200",
+  "bg-pink-500/15 text-pink-700 border-pink-200",
+  "bg-blue-500/15 text-blue-700 border-blue-200",
+];
+
+function slugifyAgent(agent_name: string) {
+  return encodeURIComponent(agent_name);
 }
 
 function buildAgents(data?: SmartSeoData): AgentSummary[] {
@@ -61,18 +70,21 @@ function buildAgents(data?: SmartSeoData): AgentSummary[] {
 
   Object.entries(data).forEach(([table, records]) => {
     records.forEach((record: SmartSeoRecord) => {
-      const key = `${record.agent_name}::${record.website}`;
+      const key = record.agent_name;
       if (!map.has(key)) {
         map.set(key, {
           agent_name: record.agent_name,
-          website: record.website,
           totalRecords: 0,
           tables: [],
+          websites: [],
         });
       }
       const current = map.get(key)!;
       current.totalRecords += 1;
       if (!current.tables.includes(table)) current.tables.push(table);
+      if (!current.websites.includes(record.website)) {
+        current.websites.push(record.website);
+      }
     });
   });
 
@@ -99,7 +111,7 @@ function AgentSkeletons() {
 export default function AgentsPage() {
   const [search, setSearch] = useState("");
   const [websiteFilter, setWebsiteFilter] = useState("");
-  const [workflowUrl, setWorkflowUrl] = useState("https://multipleai.com.au/");
+  const [workflowUrl, setWorkflowUrl] = useState("");
   const [workflowLoading, setWorkflowLoading] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useQuery<SmartSeoData>({
@@ -122,7 +134,7 @@ export default function AgentsPage() {
     return list.filter(
       (agent) =>
         (!q || agent.agent_name.toLowerCase().includes(q)) &&
-        (!w || agent.website.toLowerCase().includes(w))
+        (!w || agent.websites.some((site) => site.toLowerCase().includes(w)))
     );
   }, [data, search, websiteFilter]);
 
@@ -133,7 +145,7 @@ export default function AgentsPage() {
       return;
     }
     if (!targetUrl) {
-      toast.error("Missing NEXT_PUBLIC_N8N_FULL_SEO_URL configuration.");
+      toast.error("Missing NEXT_PUBLIC_FULL_SEO_URL configuration.");
       return;
     }
     try {
@@ -169,9 +181,58 @@ export default function AgentsPage() {
       <div className="space-y-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Initiate Full SEO Workflow</CardTitle>
+            <CardTitle className="text-xl">Agents Directory</CardTitle>
             <CardDescription>
-              Evaluate website's SEO magic.
+              Browse all SEO agent outputs grouped by agent. Click a card to
+              view structured reports per website.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="col-span-2 space-y-3">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by agent name..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Filter by website..."
+                  value={websiteFilter}
+                  onChange={(e) => setWebsiteFilter(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="bg-secondary/40 rounded-lg border border-border/60 p-3">
+                <p className="text-sm font-semibold">Total Agents</p>
+                <p className="text-2xl font-bold">{agents.length}</p>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                {isFetching ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Refresh
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Initiate Full SEO Evaluation</CardTitle>
+            <CardDescription>
+              Evaluate a website’s SEO
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -179,7 +240,7 @@ export default function AgentsPage() {
               <Input
                 placeholder="https://example.com"
                 value={workflowUrl}
-                disabled
+                onChange={(e) => setWorkflowUrl(e.target.value)}
               />
             </div>
             <div className="flex items-center">
@@ -191,12 +252,12 @@ export default function AgentsPage() {
                 {workflowLoading ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Initiating...
+                    SEO in Progress...
                   </>
                 ) : (
                   <>
                     <ArrowRight className="mr-2 h-4 w-4" />
-                    Initiate Workflow
+                    Start SEO
                   </>
                 )}
               </Button>
@@ -216,39 +277,38 @@ export default function AgentsPage() {
           <WidgetGrid>
             {agents.map((agent) => (
               <DashboardCard
-                key={`${agent.agent_name}-${agent.website}`}
-                className="flex flex-col gap-3"
+                key={`${agent.agent_name}-${agent.websites.join(",")}`}
+                className="flex flex-col gap-3 border border-border/70 bg-gradient-to-br from-secondary/60 via-secondary/40 to-secondary/20"
               >
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-foreground">
                     {formatAgentName(agent.agent_name)}
                   </p>
-                  <p className="text-xs text-muted-foreground break-all">
-                    {agent.website}
-                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="bg-primary/15 text-primary border-primary/30">
                     {agent.totalRecords} records
                   </Badge>
-                  <Badge variant="outline">{agent.tables.length} tables</Badge>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 border-emerald-200">
+                    {agent.tables.length} tables
+                  </Badge>
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-200">
+                    {agent.websites.length} websites
+                  </Badge>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {agent.tables.map((table) => (
                     <Badge
                       key={table}
                       variant="outline"
-                      className="text-[11px]"
+                      className="text-[11px] border-border/60 bg-secondary/60"
                     >
                       {table.replace(/_/g, " ")}
                     </Badge>
                   ))}
                 </div>
                 <Link
-                  href={`/dashboard/agents/${slugifyAgent(
-                    agent.agent_name,
-                    agent.website
-                  )}`}
+                  href={`/dashboard/agents/${slugifyAgent(agent.agent_name)}`}
                   className="mt-auto"
                 >
                   <Button className="w-full justify-between">
