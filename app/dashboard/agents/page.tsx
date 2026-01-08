@@ -22,7 +22,7 @@ import {
   SmartSeoData,
   SmartSeoRecord,
 } from "@/lib/smartSeo";
-import { ArrowRight, Filter, RefreshCw, Search } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 type AgentSummary = {
@@ -99,7 +99,7 @@ function AgentSkeletons() {
 export default function AgentsPage() {
   const [search, setSearch] = useState("");
   const [websiteFilter, setWebsiteFilter] = useState("");
-  const [workflowUrl, setWorkflowUrl] = useState("");
+  const [workflowUrl, setWorkflowUrl] = useState("https://multipleai.com.au/");
   const [workflowLoading, setWorkflowLoading] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useQuery<SmartSeoData>({
@@ -169,55 +169,6 @@ export default function AgentsPage() {
       <div className="space-y-6">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-xl">Agents Directory</CardTitle>
-            <CardDescription>
-              Browse all SEO agent outputs grouped by agent and website. Click a
-              card to view the fully structured report.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="col-span-2 space-y-3">
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by agent name..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Filter by website..."
-                  value={websiteFilter}
-                  onChange={(e) => setWebsiteFilter(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="bg-secondary/40 rounded-lg border border-border/60 p-3">
-                <p className="text-sm font-semibold">Total Agents</p>
-                <p className="text-2xl font-bold">{agents.length}</p>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => refetch()}
-                disabled={isFetching}
-              >
-                {isFetching ? (
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                Refresh
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
             <CardTitle className="text-lg">Initiate Full SEO Workflow</CardTitle>
             <CardDescription>
               Evaluate website's SEO magic.
@@ -228,7 +179,7 @@ export default function AgentsPage() {
               <Input
                 placeholder="https://example.com"
                 value={workflowUrl}
-                onChange={(e) => setWorkflowUrl(e.target.value)}
+                disabled
               />
             </div>
             <div className="flex items-center">
