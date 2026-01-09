@@ -2,28 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { fetchGA4Data } from '@/lib/api';
-import { getGA4Data } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { StatCard } from '../dashboard/StatCard';
 import { FileText, TrendingUp, TrendingDown, Target } from 'lucide-react';
 
 const useGA4Data = () => {
-  const [data, setData] = useState(getGA4Data());
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRealData, setIsRealData] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const realData = await fetchGA4Data();
         setData(realData);
-        setIsRealData(true);
-        setError(null);
       } catch (err: any) {
-        setError(err.message);
-        setIsRealData(false);
+        console.error('Error loading GA4 data:', err);
+        setError(err.message || 'Failed to load Google Analytics data');
       } finally {
         setLoading(false);
       }
@@ -31,13 +28,34 @@ const useGA4Data = () => {
     loadData();
   }, []);
 
-  return { data, loading, error, isRealData };
+  return { data, loading, error };
 };
 
 export const LandingPagesServiceWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.landingPages?.servicePages) {
+  if (loading) {
+    return (
+      <DashboardCard title="Service Pages" subtitle="Service landing pages performance">
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-16 bg-secondary/50 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.landingPages?.servicePages) {
+    return (
+      <DashboardCard title="Service Pages" subtitle="Service landing pages performance">
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Service Pages" subtitle="Service landing pages performance">
         <div className="space-y-3">
@@ -104,9 +122,30 @@ export const LandingPagesServiceWidget = () => {
 };
 
 export const LandingPagesBlogWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.landingPages?.blogContent) {
+  if (loading) {
+    return (
+      <DashboardCard title="Blog Content" subtitle="Blog landing pages performance">
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-16 bg-secondary/50 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.landingPages?.blogContent) {
+    return (
+      <DashboardCard title="Blog Content" subtitle="Blog landing pages performance">
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Blog Content" subtitle="Blog landing pages performance">
         <div className="space-y-3">

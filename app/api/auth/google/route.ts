@@ -13,15 +13,7 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 
-                      process.env.GOOGLE_REDIRECT_URI || 
                       'http://localhost:3000/api/auth/google/callback';
-
-  // Debug logging (remove in production)
-  console.log('=== OAuth Configuration ===');
-  console.log('Client ID:', clientId ? `${clientId.substring(0, 20)}...` : 'MISSING');
-  console.log('Client Secret:', clientSecret ? 'SET' : 'MISSING');
-  console.log('Redirect URI:', redirectUri);
-  console.log('Service:', service);
 
   if (!clientId || !clientSecret) {
     console.error('Missing required OAuth credentials');
@@ -52,8 +44,5 @@ export async function GET(request: NextRequest) {
     redirect_uri: redirectUri, // Explicitly set redirect_uri
   });
 
-  console.log('Generated Auth URL:', authUrl.substring(0, 100) + '...');
-
   return NextResponse.json({ authUrl });
 }
-

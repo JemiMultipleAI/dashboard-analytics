@@ -29,6 +29,7 @@ import {
   OrganicSessionsTrendWidget,
 } from '../widgets/TrafficWidgets';
 import {
+  GSCOverviewWidget,
   GSCQueriesWidget,
   GSCPagesWidget,
   GSCIndexingWidget,
@@ -38,22 +39,18 @@ import {
 import { KeywordPositionsWidget } from '../widgets/KeywordPositionsWidget';
 import { GSCImpressionsChartWidget } from '../widgets/GSCImpressionsWidget';
 import {
+  AdsOverviewWidget,
   AdsCampaignsWidget,
   AdsKeywordsWidget,
   AdsRecommendationsWidget,
   AdsSpendChartWidget,
 } from '../widgets/AdsWidgets';
-import { StatCard } from '../dashboard/StatCard';
-import { MousePointer, Eye, DollarSign, Target } from 'lucide-react';
-import { getGSCData, getAdsData } from '@/lib/mockData';
 
 interface WidgetRendererProps {
   type: WidgetType;
 }
 
 export const WidgetRenderer = ({ type }: WidgetRendererProps) => {
-  const gscData = getGSCData();
-  const adsData = getAdsData();
 
   switch (type) {
     // GA4 Widgets
@@ -101,20 +98,7 @@ export const WidgetRenderer = ({ type }: WidgetRendererProps) => {
 
     // GSC Widgets
     case 'gsc-overview':
-      return (
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard
-            title="Total Clicks"
-            value={gscData.overview.totalClicks.toLocaleString()}
-            icon={MousePointer}
-          />
-          <StatCard
-            title="Impressions"
-            value={gscData.overview.totalImpressions.toLocaleString()}
-            icon={Eye}
-          />
-        </div>
-      );
+      return <GSCOverviewWidget />;
     case 'gsc-queries':
       return <GSCQueriesWidget />;
     case 'gsc-pages':
@@ -132,20 +116,7 @@ export const WidgetRenderer = ({ type }: WidgetRendererProps) => {
 
     // Ads Widgets
     case 'ads-overview':
-      return (
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard
-            title="Total Spend"
-            value={`$${adsData.overview.totalSpend.toLocaleString()}`}
-            icon={DollarSign}
-          />
-          <StatCard
-            title="Conversions"
-            value={adsData.overview.totalConversions.toLocaleString()}
-            icon={Target}
-          />
-        </div>
-      );
+      return <AdsOverviewWidget />;
     case 'ads-campaigns':
       return <AdsCampaignsWidget />;
     case 'ads-keywords':

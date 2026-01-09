@@ -4,8 +4,6 @@ import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔵 Starting Google Ads data fetch...');
-    
     // Get date range from query parameters or use default (last 30 days)
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
@@ -23,7 +21,7 @@ export async function GET(request: NextRequest) {
       startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
     }
-    
+
     const developerToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
     if (!developerToken) {
       return NextResponse.json(
@@ -40,8 +38,6 @@ export async function GET(request: NextRequest) {
     if (!refreshToken) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
-
-    console.log('✅ Google Ads Authentication successful');
 
     // Initialize Google Ads API client
     const client = new GoogleAdsApi({
@@ -65,7 +61,6 @@ export async function GET(request: NextRequest) {
     
     // Remove dashes if present (format: 270-641-8609 -> 2706418609)
     const customerId = envCustomerId.replace(/-/g, '');
-    console.log('✅ Using customer ID from environment:', customerId);
 
     // Create customer instance
     const customer = client.Customer({
@@ -86,8 +81,6 @@ export async function GET(request: NextRequest) {
     
     const prevStartDateStr = prevStartDate.toISOString().split('T')[0].replace(/-/g, '');
     const prevEndDateStr = prevEndDate.toISOString().split('T')[0].replace(/-/g, '');
-
-    console.log('📊 Fetching campaign data from', startDateStr, 'to', endDateStr);
 
     // Query campaign performance data
     const campaignQuery = `
@@ -110,7 +103,6 @@ export async function GET(request: NextRequest) {
     let campaignResults: any[] = [];
     try {
       campaignResults = await customer.query(campaignQuery);
-      console.log('✅ Campaign data received:', campaignResults.length, 'campaigns');
     } catch (queryError: any) {
       console.error('Error querying campaigns:', queryError);
       return NextResponse.json(
@@ -140,9 +132,8 @@ export async function GET(request: NextRequest) {
     let keywordResults: any[] = [];
     try {
       keywordResults = await customer.query(keywordQuery);
-      console.log('✅ Keyword data received:', keywordResults.length, 'keywords');
     } catch (keywordError: any) {
-      console.warn('⚠️ Could not fetch keyword data:', keywordError.message);
+      console.warn('Could not fetch keyword data:', keywordError.message);
     }
 
     // Process campaign data
@@ -178,9 +169,8 @@ export async function GET(request: NextRequest) {
     let adGroupResults: any[] = [];
     try {
       adGroupResults = await customer.query(adGroupQuery);
-      console.log('✅ Ad group data received:', adGroupResults.length, 'ad groups');
     } catch (adGroupError: any) {
-      console.warn('⚠️ Could not fetch ad group data:', adGroupError.message);
+      console.warn('Could not fetch ad group data:', adGroupError.message);
     }
 
     // Process ad group data
@@ -212,9 +202,8 @@ export async function GET(request: NextRequest) {
     let deviceResults: any[] = [];
     try {
       deviceResults = await customer.query(deviceQuery);
-      console.log('✅ Device data received:', deviceResults.length, 'device records');
     } catch (deviceError: any) {
-      console.warn('⚠️ Could not fetch device data:', deviceError.message);
+      console.warn('Could not fetch device data:', deviceError.message);
     }
 
     // Process device data - group by device type
@@ -253,7 +242,6 @@ export async function GET(request: NextRequest) {
     });
 
     // Fetch previous period data for trend calculation
-    console.log('📊 Fetching previous period data for trends from', prevStartDateStr, 'to', prevEndDateStr);
     const prevCampaignQuery = `
       SELECT
         metrics.clicks,
@@ -266,9 +254,8 @@ export async function GET(request: NextRequest) {
     let prevCampaignResults: any[] = [];
     try {
       prevCampaignResults = await customer.query(prevCampaignQuery);
-      console.log('✅ Previous period data received:', prevCampaignResults.length, 'records');
     } catch (prevError: any) {
-      console.warn('⚠️ Could not fetch previous period data:', prevError.message);
+      console.warn('Could not fetch previous period data:', prevError.message);
     }
 
     // Calculate previous period totals
@@ -317,7 +304,7 @@ export async function GET(request: NextRequest) {
     try {
       dailySpendResults = await customer.query(dailySpendQuery);
     } catch (dailyError: any) {
-      console.warn('⚠️ Could not fetch daily spend data:', dailyError.message);
+      console.warn('Could not fetch daily spend data:', dailyError.message);
     }
 
     // Group daily spend by date
@@ -385,12 +372,10 @@ export async function GET(request: NextRequest) {
       ],
     };
 
-    console.log('✅ Google Ads data processed successfully');
-
     return NextResponse.json(result);
     
   } catch (error: any) {
-    console.error('❌ Error fetching Google Ads data:', error);
+    console.error('Error fetching Google Ads data:', error);
     
     if (error.message === 'Not authenticated' || error.message?.includes('authentication')) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

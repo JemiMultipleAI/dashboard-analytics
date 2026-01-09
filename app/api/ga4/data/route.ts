@@ -17,11 +17,10 @@ async function getAuthenticatedClient(service: 'ga4' | 'gsc') {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 
-                      process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
   if (!clientId || !clientSecret || !redirectUri) {
-    console.error('❌ Missing OAuth configuration:', {
+        console.error('Missing OAuth configuration:', {
       hasClientId: !!clientId,
       hasClientSecret: !!clientSecret,
       hasRedirectUri: !!redirectUri,
@@ -65,15 +64,13 @@ async function getAuthenticatedClient(service: 'ga4' | 'gsc') {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔵 Starting GA4 data fetch...');
-    
     // Check if refresh token exists (either in env or cookies)
     const cookieStore = await cookies();
     const envRefreshToken = process.env.GOOGLE_GA4_REFRESH_TOKEN;
     const cookieRefreshToken = cookieStore.get('google_ga4_refresh_token')?.value;
     
     if (!envRefreshToken && !cookieRefreshToken) {
-      console.error('❌ No GA4 refresh token found');
+      console.error('No GA4 refresh token found');
       return NextResponse.json(
         { 
           error: 'Not authenticated', 
@@ -85,7 +82,6 @@ export async function GET(request: NextRequest) {
     }
     
     const auth = await getAuthenticatedClient('ga4');
-    console.log('✅ Authentication successful');
     const analyticsData = google.analyticsdata('v1beta');
 
     // Try to get account summaries to find a GA4 property
@@ -108,7 +104,7 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (adminError) {
-      console.warn('Analytics Admin API not available, trying alternative method');
+      // Analytics Admin API not available, trying alternative method
       // Fallback: Try to use the first property from account summaries
       try {
         const analytics = google.analytics('v3');
@@ -143,7 +139,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('✅ Found GA4 property:', propertyId);
 
     // Get realtime data
     const realtimeResponse = await analyticsData.properties.runRealtimeReport({
@@ -634,28 +629,9 @@ export async function GET(request: NextRequest) {
       dailyUsers,
     };
 
-    console.log('✅ GA4 data fetched successfully:', {
-      activeUsers: result.realtime.activeUsers,
-      pageViews: result.realtime.pageViews,
-      totalSessions: result.sessions.total,
-      totalKeyEvents: result.keyEvents.total,
-      trafficSources: result.trafficSource.length,
-      landingPages: result.landingPages.servicePages.pages.length + result.landingPages.blogContent.pages.length,
-      audienceAgeGroups: result.audience.byAge.length,
-      keyEventsLocations: result.keyEventsByLocation.length,
-    });
-
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error('❌ Error fetching GA4 data:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      stack: error.stack?.substring(0, 300),
-    });
+    console.error('Error fetching GA4 data:', error);
     
     if (error.message === 'Not authenticated' || error.message === 'OAuth configuration incomplete') {
       return NextResponse.json(

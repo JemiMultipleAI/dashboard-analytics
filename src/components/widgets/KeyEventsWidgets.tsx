@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { fetchGA4Data } from '@/lib/api';
-import { getGA4Data } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { StatCard } from '../dashboard/StatCard';
 import { Target, TrendingDown, TrendingUp } from 'lucide-react';
@@ -10,22 +9,20 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContai
 import { cn } from '@/lib/utils';
 
 const useGA4Data = () => {
-  const [data, setData] = useState(getGA4Data());
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRealData, setIsRealData] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const realData = await fetchGA4Data();
         setData(realData);
-        setIsRealData(true);
-        setError(null);
       } catch (err: any) {
-        setError(err.message);
-        setIsRealData(false);
+        console.error('Error loading GA4 data:', err);
+        setError(err.message || 'Failed to load Google Analytics data');
       } finally {
         setLoading(false);
       }
@@ -33,27 +30,35 @@ const useGA4Data = () => {
     loadData();
   }, []);
 
-  return { data, loading, error, isRealData };
+  return { data, loading, error };
 };
 
 export const KeyEventsSummaryWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
   if (loading) {
     return (
       <div className="grid grid-cols-2 gap-4">
         {[1, 2].map((i) => (
           <div key={i} className="bg-card rounded-xl border border-border p-5 animate-pulse">
-            <div className="h-4 bg-secondary rounded w-20 mb-3"></div>
-            <div className="h-8 bg-secondary rounded w-24 mb-2"></div>
-            <div className="h-4 bg-secondary rounded w-16"></div>
+            <div className="h-4 bg-secondary/50 rounded w-20 mb-3"></div>
+            <div className="h-8 bg-secondary/50 rounded w-24 mb-2"></div>
+            <div className="h-4 bg-secondary/50 rounded w-16"></div>
           </div>
         ))}
       </div>
     );
   }
 
-  const keyEvents = data.keyEvents || { total: 0, totalTrend: 0, sessionKeyEventRate: 0, sessionKeyEventRateTrend: 0 };
+  if (error || !data?.keyEvents) {
+    return (
+      <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive">
+        <p className="text-sm">{error || 'No data available'}</p>
+      </div>
+    );
+  }
+
+  const keyEvents = data.keyEvents;
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -76,9 +81,26 @@ export const KeyEventsSummaryWidget = () => {
 };
 
 export const KeyEventsTrendWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.keyEvents?.trendOverTime) {
+  if (loading) {
+    return (
+      <DashboardCard title="Overall Key Events" subtitle="Key events over time">
+        <div className="h-64 bg-secondary/50 rounded animate-pulse"></div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.keyEvents?.trendOverTime) {
+    return (
+      <DashboardCard title="Overall Key Events" subtitle="Key events over time">
+        <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Overall Key Events" subtitle="Key events over time">
         <div className="h-64 bg-secondary/50 rounded animate-pulse"></div>
@@ -135,9 +157,30 @@ export const KeyEventsTrendWidget = () => {
 };
 
 export const KeyEventsBySourceWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.keyEvents?.bySource) {
+  if (loading) {
+    return (
+      <DashboardCard title="Key Events By Source" subtitle="Key events breakdown by traffic source">
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-12 bg-secondary/50 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.keyEvents?.bySource) {
+    return (
+      <DashboardCard title="Key Events By Source" subtitle="Key events breakdown by traffic source">
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Key Events By Source" subtitle="Key events breakdown by traffic source">
         <div className="space-y-3">
@@ -153,13 +196,13 @@ export const KeyEventsBySourceWidget = () => {
     <DashboardCard title="Key Events By Source" subtitle="Key events breakdown by traffic source">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left text-xs font-medium text-muted-foreground pb-3">Session default...</th>
-              <th className="text-right text-xs font-medium text-muted-foreground pb-3">Key events</th>
-              <th className="text-right text-xs font-medium text-muted-foreground pb-3">Key event %</th>
-            </tr>
-          </thead>
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left text-xs font-medium text-muted-foreground pb-3">Source</th>
+                <th className="text-right text-xs font-medium text-muted-foreground pb-3">Key events</th>
+                <th className="text-right text-xs font-medium text-muted-foreground pb-3">Key event %</th>
+              </tr>
+            </thead>
           <tbody>
             {data.keyEvents.bySource.map((item: any) => (
               <tr key={item.source} className="border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors">
@@ -176,9 +219,26 @@ export const KeyEventsBySourceWidget = () => {
 };
 
 export const KeyEventBreakdownWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.keyEvents?.breakdown) {
+  if (loading) {
+    return (
+      <DashboardCard title="Key Event Breakdown" subtitle="Key events by event type">
+        <div className="h-48 bg-secondary/50 rounded animate-pulse"></div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.keyEvents?.breakdown) {
+    return (
+      <DashboardCard title="Key Event Breakdown" subtitle="Key events by event type">
+        <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Key Event Breakdown" subtitle="Key events by event type">
         <div className="h-48 bg-secondary/50 rounded animate-pulse"></div>

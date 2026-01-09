@@ -16,8 +16,7 @@ async function getAuthenticatedClient() {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 
-                      process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
   if (!clientId || !clientSecret || !redirectUri) {
     console.error('❌ Missing OAuth configuration:', {
@@ -64,8 +63,6 @@ async function getAuthenticatedClient() {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔵 Starting GSC data fetch...');
-    
     // Check if refresh token exists (either in env or cookies)
     const cookieStore = await cookies();
     const envRefreshToken = process.env.GOOGLE_GSC_REFRESH_TOKEN;
@@ -84,22 +81,17 @@ export async function GET(request: NextRequest) {
     }
     
     const auth = await getAuthenticatedClient();
-    console.log('✅ GSC Authentication successful');
     const searchconsole = google.searchconsole('v1');
 
     // Get the list of sites
-    console.log('📋 Fetching sites list...');
     const sitesResponse = await searchconsole.sites.list({ auth });
-    console.log('✅ Sites list received:', sitesResponse.data.siteEntry?.length || 0, 'sites');
-    
     if (!sitesResponse.data.siteEntry || sitesResponse.data.siteEntry.length === 0) {
-      console.error('❌ No sites found in Search Console');
+      console.error('No sites found in Search Console');
       return NextResponse.json({ error: 'No sites found in Search Console. Please add a property to Google Search Console first.' }, { status: 404 });
     }
 
     // Use the first site (you may want to make this configurable)
     const siteUrl = sitesResponse.data.siteEntry[0].siteUrl;
-    console.log('🌐 Using site URL:', siteUrl);
 
     // Get date range (last 28 days)
     const endDate = new Date();
@@ -108,8 +100,6 @@ export async function GET(request: NextRequest) {
 
     const endDateStr = endDate.toISOString().split('T')[0];
     const startDateStr = startDate.toISOString().split('T')[0];
-
-    console.log('📊 Fetching search analytics data from', startDateStr, 'to', endDateStr);
 
     // Get search analytics data
     const searchAnalyticsResponse = await searchconsole.searchanalytics.query({
@@ -123,7 +113,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log('✅ Search analytics data received:', searchAnalyticsResponse.data.rows?.length || 0, 'rows');
 
     const rows = searchAnalyticsResponse.data.rows || [];
 
@@ -247,24 +236,9 @@ export async function GET(request: NextRequest) {
       ],
     };
 
-    console.log('✅ GSC data processed successfully:', {
-      totalClicks,
-      totalImpressions,
-      topQueriesCount: topQueries.length,
-      topPagesCount: topPages.length,
-    });
-
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error('❌ Error fetching GSC data:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      stack: error.stack?.substring(0, 300),
-    });
+    console.error('Error fetching GSC data:', error);
     
     if (error.message === 'Not authenticated' || error.message === 'OAuth configuration incomplete') {
       return NextResponse.json(
