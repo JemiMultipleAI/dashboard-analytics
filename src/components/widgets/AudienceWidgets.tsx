@@ -2,28 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { fetchGA4Data } from '@/lib/api';
-import { getGA4Data } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { MapPin, Users, User, Map } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const useGA4Data = () => {
-  const [data, setData] = useState(getGA4Data());
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRealData, setIsRealData] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const realData = await fetchGA4Data();
         setData(realData);
-        setIsRealData(true);
-        setError(null);
       } catch (err: any) {
-        setError(err.message);
-        setIsRealData(false);
+        console.error('Error loading GA4 data:', err);
+        setError(err.message || 'Failed to load Google Analytics data');
       } finally {
         setLoading(false);
       }
@@ -31,15 +28,39 @@ const useGA4Data = () => {
     loadData();
   }, []);
 
-  return { data, loading, error, isRealData };
+  return { data, loading, error };
 };
 
 const COLORS = ['hsl(var(--primary))', '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1'];
 
 export const AudienceByStateWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.audience?.byState) {
+  if (loading) {
+    return (
+      <DashboardCard title="Audience By State" subtitle="Geographic distribution">
+        <div className="space-y-3">
+          <div className="h-48 bg-secondary/50 rounded animate-pulse"></div>
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-10 bg-secondary/50 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.audience?.byState) {
+    return (
+      <DashboardCard title="Audience By State" subtitle="Geographic distribution">
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Audience By State" subtitle="Geographic distribution">
         <div className="space-y-3">
@@ -91,9 +112,26 @@ export const AudienceByStateWidget = () => {
 };
 
 export const AudienceAgeWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.audience?.byAge) {
+  if (loading) {
+    return (
+      <DashboardCard title="Audience Age" subtitle="Age distribution">
+        <div className="h-48 bg-secondary/50 rounded animate-pulse"></div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.audience?.byAge) {
+    return (
+      <DashboardCard title="Audience Age" subtitle="Age distribution">
+        <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Audience Age" subtitle="Age distribution">
         <div className="h-48 bg-secondary/50 rounded animate-pulse"></div>
@@ -141,9 +179,26 @@ export const AudienceAgeWidget = () => {
 };
 
 export const AudienceGenderWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.audience?.byGender) {
+  if (loading) {
+    return (
+      <DashboardCard title="Audience Gender" subtitle="Gender distribution">
+        <div className="h-48 bg-secondary/50 rounded animate-pulse"></div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.audience?.byGender) {
+    return (
+      <DashboardCard title="Audience Gender" subtitle="Gender distribution">
+        <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Audience Gender" subtitle="Gender distribution">
         <div className="h-48 bg-secondary/50 rounded animate-pulse"></div>
@@ -192,9 +247,30 @@ export const AudienceGenderWidget = () => {
 };
 
 export const AudienceLocationEventsWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.audience?.byLocation) {
+  if (loading) {
+    return (
+      <DashboardCard title="Key Events Based on Location" subtitle="Key events by geographic location">
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-8 bg-secondary/50 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.audience?.byLocation) {
+    return (
+      <DashboardCard title="Key Events Based on Location" subtitle="Key events by geographic location">
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Key Events Based on Location" subtitle="Key events by geographic location">
         <div className="space-y-2">

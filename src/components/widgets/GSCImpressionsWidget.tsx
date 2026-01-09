@@ -2,27 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { fetchGSCData } from '@/lib/api';
-import { getGSCData } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const useGSCData = () => {
-  const [data, setData] = useState(getGSCData());
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRealData, setIsRealData] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const realData = await fetchGSCData();
         setData(realData);
-        setIsRealData(true);
-        setError(null);
       } catch (err: any) {
-        setError(err.message);
-        setIsRealData(false);
+        console.error('Error loading GSC data:', err);
+        setError(err.message || 'Failed to load Search Console data');
       } finally {
         setLoading(false);
       }
@@ -30,13 +27,30 @@ const useGSCData = () => {
     loadData();
   }, []);
 
-  return { data, loading, error, isRealData };
+  return { data, loading, error };
 };
 
 export const GSCImpressionsChartWidget = () => {
-  const { data, loading } = useGSCData();
+  const { data, loading, error } = useGSCData();
   
-  if (loading || !data?.impressionsOverTime) {
+  if (loading) {
+    return (
+      <DashboardCard title="Impressions" subtitle="Impressions over time">
+        <div className="h-64 bg-secondary/50 rounded animate-pulse"></div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.impressionsOverTime) {
+    return (
+      <DashboardCard title="Impressions" subtitle="Impressions over time">
+        <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+  
     return (
       <DashboardCard title="Impressions" subtitle="Impressions over time">
         <div className="h-64 bg-secondary/50 rounded animate-pulse"></div>

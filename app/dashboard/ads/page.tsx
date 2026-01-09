@@ -15,7 +15,7 @@ import {
 import { useApp } from '@/contexts/AppContext';
 import { DateRangePicker } from '@/components/dashboard/DateRangePicker';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { fetchAdsData } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -63,7 +63,7 @@ export default function AdsDashboard() {
       <div className="space-y-6 animate-fade-in">
         {!connectedAccounts.ads && (
           <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 text-warning">
-            <p className="text-sm">⚠️ Google Ads is not connected. Showing mock data for testing. Connect your account to see real data.</p>
+            <p className="text-sm">Google Ads is not connected. Please connect your account from the dashboard to see Google Ads data.</p>
           </div>
         )}
 

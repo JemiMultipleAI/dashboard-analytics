@@ -13,7 +13,7 @@ import {
 import { useApp } from '@/contexts/AppContext';
 import { fetchGSCData } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SearchConsoleDashboard() {
@@ -40,19 +40,17 @@ export default function SearchConsoleDashboard() {
       }
       setError(null);
       await fetchGSCData(forceRefresh);
-      console.log('✅ Loaded real GSC data');
       if (forceRefresh) {
         toast.success('Data refreshed successfully');
         // Force widgets to re-fetch by triggering a re-render
         window.dispatchEvent(new Event('gsc-data-refresh'));
       }
     } catch (err: any) {
-      console.error('❌ Error loading GSC data:', err);
-      setError(err.message);
+      console.error('Error loading GSC data:', err);
+      setError(err.message || 'Failed to load Search Console data');
       if (forceRefresh) {
         toast.error('Failed to refresh data');
       }
-      // Keep using mock data on error
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -87,13 +85,20 @@ export default function SearchConsoleDashboard() {
         )}
         {!connectedAccounts.gsc && (
           <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 text-warning">
-            <p className="text-sm">⚠️ Google Search Console is not connected. Showing mock data. Connect your account to see real data.</p>
+            <p className="text-sm">Google Search Console is not connected. Please connect your account from the dashboard to see search console data.</p>
+          </div>
+        )}
+
+        {loading && connectedAccounts.gsc && !error && (
+          <div className="bg-card rounded-xl border border-border p-8 text-center">
+            <Loader2 className="w-8 h-8 mx-auto mb-4 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading search console data...</p>
           </div>
         )}
         
-        {error && connectedAccounts.gsc && (
+        {error && connectedAccounts.gsc && !loading && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive">
-            <p className="text-sm font-medium">❌ Error loading data:</p>
+            <p className="text-sm font-medium">Error loading data:</p>
             <p className="text-sm mt-1">{error}</p>
             {error.includes('Access denied') && (
               <div className="mt-3 p-3 bg-background rounded border border-border">
@@ -107,16 +112,10 @@ export default function SearchConsoleDashboard() {
               <div className="mt-3 p-3 bg-background rounded border border-border">
                 <p className="text-xs text-muted-foreground">
                   <strong>Quota Limit:</strong> Google APIs have rate limits. The quota will reset automatically 
-                  in under an hour. You can continue using mock data in the meantime.
+                  in under an hour. Please try again later.
                 </p>
               </div>
             )}
-          </div>
-        )}
-
-        {loading && connectedAccounts.gsc && (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>Loading real-time analytics data...</p>
           </div>
         )}
         

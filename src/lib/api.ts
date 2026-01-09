@@ -24,13 +24,11 @@ export async function fetchGA4Data(forceRefresh: boolean = false) {
   if (!forceRefresh) {
     const cached = getCachedData(cacheKey);
     if (cached) {
-      console.log('📦 Using cached GA4 data');
       return cached;
     }
   }
   
   try {
-    console.log('🔄 Fetching fresh GA4 data from API...');
     const response = await fetch('/api/ga4/data');
     
     if (!response.ok) {
@@ -86,11 +84,10 @@ export async function fetchGA4Data(forceRefresh: boolean = false) {
     
     const data = await response.json();
     
-    // Cache the successful response
-    setCachedData(cacheKey, data, CACHE_TTL.GA4);
-    console.log('✅ GA4 data cached for', CACHE_TTL.GA4 / 1000 / 60, 'minutes');
-    
-    return data;
+  // Cache the successful response
+  setCachedData(cacheKey, data, CACHE_TTL.GA4);
+  
+  return data;
   } catch (error: any) {
     // Handle network errors or other fetch failures
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -118,13 +115,11 @@ export async function fetchGSCData(forceRefresh: boolean = false, retryCount: nu
   if (!forceRefresh) {
     const cached = getCachedData(cacheKey);
     if (cached) {
-      console.log('📦 Using cached GSC data');
       return cached;
     }
   }
   
   try {
-    console.log('🔄 Fetching fresh GSC data from API...', retryCount > 0 ? `(Retry ${retryCount}/${MAX_RETRIES})` : '');
     const response = await fetch('/api/gsc/data');
     
     if (!response.ok) {
@@ -170,7 +165,7 @@ export async function fetchGSCData(forceRefresh: boolean = false, retryCount: nu
       
       // Retry logic for transient errors (5xx, 429)
       if (retryCount < MAX_RETRIES && (response.status >= 500 || response.status === 429)) {
-        console.warn(`⚠️ Retrying GSC API call after ${RETRY_DELAY}ms...`);
+        // Retrying GSC API call
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
         return fetchGSCData(forceRefresh, retryCount + 1);
       }
@@ -190,11 +185,10 @@ export async function fetchGSCData(forceRefresh: boolean = false, retryCount: nu
     
     const data = await response.json();
     
-    // Cache the successful response
-    setCachedData(cacheKey, data, CACHE_TTL.GSC);
-    console.log('✅ GSC data cached for', CACHE_TTL.GSC / 1000 / 60, 'minutes');
-    
-    return data;
+  // Cache the successful response
+  setCachedData(cacheKey, data, CACHE_TTL.GSC);
+  
+  return data;
   } catch (error: any) {
     // Don't retry if it's an authentication error or client error (4xx except 429)
     if (error.message?.includes('Not authenticated') || (error.message?.includes('HTTP 4') && !error.message?.includes('429'))) {
@@ -203,7 +197,7 @@ export async function fetchGSCData(forceRefresh: boolean = false, retryCount: nu
     
     // Retry on network errors or unknown errors
     if (retryCount < MAX_RETRIES && (error.name === 'TypeError' || !error.message)) {
-      console.warn(`⚠️ Retrying GSC API call after ${RETRY_DELAY}ms due to network error...`);
+      // Retrying GSC API call due to network error
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       return fetchGSCData(forceRefresh, retryCount + 1);
     }
@@ -231,12 +225,9 @@ export async function fetchAdsData(startDate?: Date, endDate?: Date, forceRefres
   if (!forceRefresh) {
     const cached = getCachedData(cacheKey);
     if (cached) {
-      console.log('📦 Using cached Google Ads data');
       return cached;
     }
   }
-  
-  console.log('🔄 Fetching fresh Google Ads data from API...');
   const url = `/api/ads/data${params.toString() ? `?${params.toString()}` : ''}`;
   const response = await fetch(url);
   
@@ -295,7 +286,6 @@ export async function fetchAdsData(startDate?: Date, endDate?: Date, forceRefres
   
   // Cache the successful response
   setCachedData(cacheKey, data, CACHE_TTL.ADS);
-  console.log('✅ Google Ads data cached for', CACHE_TTL.ADS / 1000 / 60, 'minutes');
   
   return data;
 }

@@ -2,29 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { fetchGA4Data } from '@/lib/api';
-import { getGA4Data } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { StatCard } from '../dashboard/StatCard';
 import { MousePointer, TrendingUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const useGA4Data = () => {
-  const [data, setData] = useState(getGA4Data());
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRealData, setIsRealData] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const realData = await fetchGA4Data();
         setData(realData);
-        setIsRealData(true);
-        setError(null);
       } catch (err: any) {
-        setError(err.message);
-        setIsRealData(false);
+        console.error('Error loading GA4 data:', err);
+        setError(err.message || 'Failed to load Google Analytics data');
       } finally {
         setLoading(false);
       }
@@ -32,13 +29,47 @@ const useGA4Data = () => {
     loadData();
   }, []);
 
-  return { data, loading, error, isRealData };
+  return { data, loading, error };
 };
 
 export const TrafficSourceWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.trafficSource) {
+  if (loading) {
+    return (
+      <DashboardCard title="Traffic Source" subtitle="Sessions by traffic source">
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-12 bg-secondary/50 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.trafficSource) {
+    return (
+      <DashboardCard title="Traffic Source" subtitle="Sessions by traffic source">
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
+      </DashboardCard>
+    );
+  }
+
+  return (
+    <DashboardCard title="Traffic Source" subtitle="Sessions by traffic source">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left text-xs font-medium text-muted-foreground pb-3">Source</th>
+              <th className="text-right text-xs font-medium text-muted-foreground pb-3">Sessions</th>
+              <th className="text-right text-xs font-medium text-muted-foreground pb-3">Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.trafficSource.map((source: any) => (
     return (
       <DashboardCard title="Traffic Source" subtitle="Sessions by traffic source">
         <div className="space-y-3">
@@ -65,8 +96,8 @@ export const TrafficSourceWidget = () => {
             {data.trafficSource.map((source: any) => (
               <tr key={source.source} className="border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors">
                 <td className="py-3 text-sm text-foreground font-medium">{source.source}</td>
-                <td className="py-3 text-sm text-right text-foreground">{source.sessions.toLocaleString()}</td>
-                <td className="py-3 text-sm text-right text-foreground">{source.percentage.toFixed(2)}%</td>
+                <td className="py-3 text-sm text-right text-foreground">{source.sessions?.toLocaleString() || '0'}</td>
+                <td className="py-3 text-sm text-right text-foreground">{source.percentage ? source.percentage.toFixed(2) : '0.00'}%</td>
               </tr>
             ))}
           </tbody>
@@ -77,12 +108,22 @@ export const TrafficSourceWidget = () => {
 };
 
 export const SessionsTrendWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.sessionsOverTime) {
+  if (loading) {
     return (
       <DashboardCard title="Overall Sessions" subtitle="Sessions over time">
         <div className="h-64 bg-secondary/50 rounded animate-pulse"></div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.sessionsOverTime) {
+    return (
+      <DashboardCard title="Overall Sessions" subtitle="Sessions over time">
+        <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
       </DashboardCard>
     );
   }
@@ -137,12 +178,22 @@ export const SessionsTrendWidget = () => {
 };
 
 export const OrganicSessionsTrendWidget = () => {
-  const { data, loading } = useGA4Data();
+  const { data, loading, error } = useGA4Data();
   
-  if (loading || !data?.organicSessionsOverTime) {
+  if (loading) {
     return (
       <DashboardCard title="Organic Sessions" subtitle="Organic sessions over time">
         <div className="h-64 bg-secondary/50 rounded animate-pulse"></div>
+      </DashboardCard>
+    );
+  }
+
+  if (error || !data?.organicSessionsOverTime) {
+    return (
+      <DashboardCard title="Organic Sessions" subtitle="Organic sessions over time">
+        <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">
+          {error || 'No data available'}
+        </div>
       </DashboardCard>
     );
   }

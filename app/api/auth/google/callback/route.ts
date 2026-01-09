@@ -8,9 +8,7 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state'); // Service type: 'ga4', 'gsc', or 'ads'
 
   if (!code || !state) {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                    process.env.BASE_URL || 
-                    'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     return NextResponse.redirect(new URL('/dashboard?error=auth_failed', baseUrl));
   }
 
@@ -18,15 +16,8 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 
-                      process.env.GOOGLE_REDIRECT_URI || 
                       'http://localhost:3000/api/auth/google/callback';
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-                  process.env.BASE_URL || 
-                  'http://localhost:3000';
-
-  console.log('=== OAuth Callback ===');
-  console.log('Redirect URI:', redirectUri);
-  console.log('Base URL:', baseUrl);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
   if (!clientId || !clientSecret) {
     console.error('Missing required OAuth credentials in callback');
@@ -67,4 +58,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard?error=auth_failed', baseUrl));
   }
 }
-

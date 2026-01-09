@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAdsData } from '@/lib/api';
-import { getAdsData } from '@/lib/mockData';
 import { DashboardCard } from '../dashboard/DashboardCard';
 import { StatCard } from '../dashboard/StatCard';
 import { DollarSign, TrendingUp, Target, Zap, Lightbulb, Play, Pause, MousePointer, Monitor, Smartphone, Tablet } from 'lucide-react';
@@ -19,46 +18,21 @@ const useAdsData = ({ dateRange }: UseAdsDataProps = {}) => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRealData, setIsRealData] = useState(false);
-  const [isMockData, setIsMockData] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
-        setIsMockData(false);
-        console.log('🔄 Fetching real Google Ads data...');
         
         const startDate = dateRange?.from;
         const endDate = dateRange?.to;
         
         const realData = await fetchAdsData(startDate, endDate);
-        console.log('✅ Received real Google Ads data:', realData);
-        
-        // Check if API returned an error
-        if (realData.error) {
-          // Fall back to mock data for testing
-          console.warn('⚠️ API returned error, using mock data for testing:', realData.error);
-          const mockData = getAdsData();
-          setData(mockData);
-          setIsRealData(false);
-          setIsMockData(true);
-          setError(realData.error); // Keep error for user awareness
-        } else {
-          setData(realData);
-          setIsRealData(true);
-          setIsMockData(false);
-          setError(null);
-        }
+        setData(realData);
       } catch (err: any) {
-        // Fall back to mock data for testing when API fails
-        console.warn('⚠️ Error fetching Google Ads data, using mock data for testing:', err.message);
-        const mockData = getAdsData();
-        setData(mockData);
-        setIsRealData(false);
-        setIsMockData(true);
-        setError(err.message); // Keep error for user awareness
+        console.error('Error fetching Google Ads data:', err);
+        setError(err.message || 'Failed to load Google Ads data');
       } finally {
         setLoading(false);
       }
@@ -67,7 +41,7 @@ const useAdsData = ({ dateRange }: UseAdsDataProps = {}) => {
     loadData();
   }, [dateRange?.from, dateRange?.to]);
 
-  return { data, loading, error, isRealData, isMockData };
+  return { data, loading, error };
 };
 
 interface AdsWidgetsProps {
@@ -75,47 +49,39 @@ interface AdsWidgetsProps {
 }
 
 export const AdsOverviewWidget = ({ dateRange }: AdsWidgetsProps) => {
-  const { data, loading, error, isRealData, isMockData } = useAdsData({ dateRange });
+  const { data, loading, error } = useAdsData({ dateRange });
   
   if (loading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="bg-card rounded-xl border border-border p-5 animate-pulse">
-            <div className="h-4 bg-secondary rounded w-20 mb-3"></div>
-            <div className="h-8 bg-secondary rounded w-24 mb-2"></div>
-            <div className="h-4 bg-secondary rounded w-16"></div>
+            <div className="h-4 bg-secondary/50 rounded w-20 mb-3"></div>
+            <div className="h-8 bg-secondary/50 rounded w-24 mb-2"></div>
+            <div className="h-4 bg-secondary/50 rounded w-16"></div>
           </div>
         ))}
       </div>
     );
   }
   
-  if (!data) {
+  if (error || !data) {
     return (
       <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive">
-        <p className="text-sm font-medium">❌ Error loading Google Ads data:</p>
+        <p className="text-sm font-medium">Error loading Google Ads data:</p>
         <p className="text-xs mt-1">{error || 'No data available'}</p>
         {error?.includes('Not authenticated') && (
           <p className="text-xs mt-2">Please connect your Google Ads account from the dashboard.</p>
+        )}
+        {error?.includes('Customer ID not configured') && (
+          <p className="text-xs mt-2">Please set your Google Ads Customer ID in the dashboard settings.</p>
         )}
       </div>
     );
   }
   
   return (
-    <>
-      {isRealData && (
-        <div className="bg-success/10 border border-success/20 rounded-lg p-2 text-success mb-4 text-xs">
-          ✅ Showing real Google Ads data
-        </div>
-      )}
-      {isMockData && (
-        <div className="bg-warning/10 border border-warning/20 rounded-lg p-2 text-warning mb-4 text-xs">
-          🧪 Showing mock data for testing. {error && <span className="ml-1">({error})</span>}
-        </div>
-      )}
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <StatCard
           title="Clicks"
           value={data.overview.clicks?.toLocaleString() || '0'}
